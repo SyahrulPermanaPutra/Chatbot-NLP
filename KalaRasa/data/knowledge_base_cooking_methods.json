@@ -1,0 +1,25 @@
+{
+  "teknik_panas_kering": {
+    "goreng": ["goreng", "deep fry", "digoreng", "menggoreng", "goreng kering", "goreng tepung", "crispy"],
+    "panggang": ["panggang", "bakar", "grill", "dipanggang", "dibakar", "oven", "roast", "bbq", "barbeque"],
+    "tumis": ["tumis", "oseng", "saute", "ditumis", "dioseng", "cah", "capcay"]
+  },
+  "teknik_panas_basah": {
+    "rebus": ["rebus", "direbus", "merebus", "kukus", "dikukus", "mengukus", "steam"],
+    "ungkep": ["ungkep", "diungkep", "mengungkep", "tim", "ditim"],
+    "kuah": ["berkuah", "kuah", "sup", "sop", "sayur", "gulai", "kari", "curry"]
+  },
+  "teknik_kombinasi": {
+    "goreng_kuah": ["semur", "rendang", "rica-rica", "balado"],
+    "kukus_goreng": ["pepes", "botok"]
+  },
+  "teknik_tanpa_panas": {
+    "mentah": ["salad", "lalapan", "karedok", "gado-gado", "asinan"],
+    "marinasi": ["marinasi", "rendaman", "bumbu meresap"]
+  },
+  "tingkat_kematangan": {
+    "matang": ["matang sempurna", "well done", "empuk"],
+    "setengah_matang": ["medium", "setengah matang"],
+    "mentah": ["rare", "sashimi", "tataki"]
+  }
+}

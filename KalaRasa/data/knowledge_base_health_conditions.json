@@ -1,0 +1,72 @@
+{
+  "kondisi_kesehatan": {
+    "diabetes": {
+      "nama": "diabetes",
+      "sinonim": ["diabetis", "kencing manis", "gula darah", "dm", "penyakit gula"],
+      "hindari": ["gula", "gula merah", "gula aren", "madu", "sirup", "kecap manis", "nasi putih", "tepung terigu", "roti putih", "mie instan"],
+      "anjuran": ["beras merah", "beras coklat", "oat", "quinoa", "kentang", "ubi", "sayuran hijau"]
+    },
+    "kolesterol": {
+      "nama": "kolesterol",
+      "sinonim": ["kolesterol tinggi", "lemak darah", "hiperkolesterolemia"],
+      "hindari": ["santan", "kelapa", "jeroan", "kuning telur", "mentega", "margarin", "keju", "susu full cream", "gorengan", "daging berlemak"],
+      "anjuran": ["ikan", "ayam tanpa kulit", "putih telur", "susu low fat", "minyak zaitun", "alpukat", "kacang-kacangan"]
+    },
+    "asam_urat": {
+      "nama": "asam urat",
+      "sinonim": ["asam urat tinggi", "gout", "encok", "pegal linu"],
+      "hindari": ["jeroan", "daging merah", "seafood", "ikan teri", "sarden", "bayam", "kangkung", "kembang kol", "melinjo", "emping"],
+      "anjuran": ["ayam", "telur", "tahu", "tempe", "sayuran rendah purin", "buah-buahan", "air putih banyak"]
+    },
+    "hipertensi": {
+      "nama": "hipertensi",
+      "sinonim": ["darah tinggi", "tensi tinggi", "tekanan darah tinggi"],
+      "hindari": ["garam", "msg", "kecap asin", "saus tiram", "terasi", "makanan kaleng", "daging olahan", "gorengan"],
+      "anjuran": ["buah-buahan", "sayuran", "bawang putih", "pisang", "alpukat", "kacang-kacangan", "ikan"]
+    },
+    "maag": {
+      "nama": "maag",
+      "sinonim": ["sakit maag", "lambung", "asam lambung", "gerd", "tukak lambung"],
+      "hindari": ["pedas", "cabai", "asam", "jeruk", "tomat", "kopi", "coklat", "gorengan", "santan kental"],
+      "anjuran": ["makanan lembut", "kukus", "rebus", "oatmeal", "pisang", "kentang", "ayam tanpa kulit"]
+    },
+    "alergi_dairy": {
+      "nama": "alergi dairy",
+      "sinonim": ["alergi susu", "lactose intolerant", "intoleransi laktosa", "tidak bisa susu"],
+      "hindari": ["susu", "keju", "yogurt", "mentega", "krim", "cream cheese", "whipped cream"],
+      "anjuran": ["susu kedelai", "susu almond", "santan", "margarin nabati"]
+    },
+    "alergi_gluten": {
+      "nama": "alergi gluten",
+      "sinonim": ["celiac", "gluten free", "tidak bisa tepung", "alergi gandum"],
+      "hindari": ["tepung terigu", "roti", "pasta", "mie", "kue", "biskuit", "oat (kecuali certified GF)"],
+      "anjuran": ["beras", "kentang", "jagung", "tepung beras", "tepung tapioka", "quinoa"]
+    },
+    "alergi_seafood": {
+      "nama": "alergi seafood",
+      "sinonim": ["alergi makanan laut", "alergi ikan", "tidak bisa seafood"],
+      "hindari": ["ikan", "udang", "cumi", "kerang", "kepiting", "lobster", "semua seafood"],
+      "anjuran": ["ayam", "sapi", "telur", "tahu", "tempe"]
+    },
+    "vegetarian": {
+      "nama": "vegetarian",
+      "sinonim": ["vegetarian", "vegan", "nabati", "tidak makan daging"],
+      "hindari": ["daging", "ayam", "ikan", "seafood", "kaldu hewani"],
+      "anjuran": ["tahu", "tempe", "kacang-kacangan", "sayuran", "buah-buahan", "nasi", "pasta"]
+    },
+    "diet_rendah_kalori": {
+      "nama": "diet rendah kalori",
+      "sinonim": ["diet", "turun berat badan", "kurus", "menurunkan berat badan", "diet kalori"],
+      "hindari": ["gorengan", "santan", "gula", "nasi putih berlebihan", "mie instan", "makanan berminyak"],
+      "anjuran": ["sayuran", "protein tanpa lemak", "nasi merah", "rebus", "kukus", "panggang tanpa minyak"]
+    }
+  },
+  "preferensi_rasa": {
+    "pedas": ["pedas", "pedes", "spicy", "hot", "level pedas", "extra pedas"],
+    "manis": ["manis", "sweet", "gula"],
+    "asin": ["asin", "salty", "gurih asin"],
+    "asam": ["asam", "sour", "kecut"],
+    "gurih": ["gurih", "umami", "savory"],
+    "segar": ["segar", "fresh", "ringan", "light"]
+  }
+}

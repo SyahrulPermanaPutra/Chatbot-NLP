@@ -1,0 +1,39 @@
+{
+  "protein": {
+    "daging": ["ayam", "sapi", "kambing", "bebek", "babi", "domba", "kalkun"],
+    "seafood": ["ikan", "udang", "cumi", "kerang", "kepiting", "lobster", "salmon", "tuna", "kakap", "gurita", "teri"],
+    "telur": ["telur ayam", "telur bebek", "telur puyuh"],
+    "nabati": ["tahu", "tempe", "oncom", "kacang merah", "kacang hijau", "kacang kedelai", "edamame", "chickpeas"]
+  },
+  "sayuran": {
+    "hijau": ["bayam", "kangkung", "sawi", "brokoli", "kale", "selada", "pakcoy", "seledri", "daun bawang", "kailan"],
+    "umbi": ["kentang", "ubi", "singkong", "talas", "wortel", "lobak", "bit"],
+    "buah_sayur": ["tomat", "terong", "timun", "labu", "zucchini", "paprika", "cabai"],
+    "kacang_polong": ["buncis", "kacang panjang", "kapri"],
+    "jamur": ["jamur kancing", "jamur tiram", "jamur shiitake", "jamur kuping", "jamur enoki"]
+  },
+  "karbohidrat": {
+    "nasi": ["beras putih", "beras merah", "beras coklat", "beras hitam", "nasi"],
+    "mie": ["mie", "pasta", "spaghetti", "makaroni", "bihun", "kwetiau", "soun"],
+    "roti": ["roti", "roti tawar", "roti gandum", "tortilla", "pita"],
+    "lainnya": ["jagung", "oat", "quinoa", "sagu", "tepung terigu", "tepung beras"]
+  },
+  "bumbu_dasar": {
+    "bawang": ["bawang merah", "bawang putih", "bawang bombay", "bawang prei"],
+    "cabai": ["cabai merah", "cabai rawit", "cabai hijau", "cabai keriting"],
+    "rempah": ["jahe", "kunyit", "lengkuas", "kencur", "temulawak", "kayu manis", "cengkeh", "pala", "kapulaga", "ketumbar", "jintan", "merica"],
+    "aromatik": ["serai", "daun salam", "daun jeruk", "kemangi", "daun pandan"]
+  },
+  "lemak": {
+    "minyak": ["minyak goreng", "minyak zaitun", "minyak kelapa", "minyak wijen", "minyak sayur"],
+    "santan": ["santan", "kelapa parut", "krim kelapa"],
+    "mentega": ["mentega", "margarin", "butter"],
+    "dairy": ["susu", "keju", "yogurt", "krim", "cream cheese"]
+  },
+  "penyedap": {
+    "asin": ["garam", "kecap asin", "saus tiram", "saus ikan", "terasi", "petis"],
+    "manis": ["gula", "gula merah", "gula aren", "madu", "sirup maple", "kecap manis"],
+    "asam": ["jeruk nipis", "jeruk lemon", "cuka", "asam jawa", "asam kandis"],
+    "umami": ["kaldu", "msg", "royco", "masako", "miso"]
+  }
+}

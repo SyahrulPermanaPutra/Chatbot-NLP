@@ -1,0 +1,101 @@
+text,intent
+mau masak ayam,cari_resep
+pengen bikin masakan pake udang,cari_resep
+ada resep ikan gak,cari_resep
+gimana cara masak rendang,cari_resep
+cariin resep sayur asem dong,cari_resep
+mau masak yang simple aja,cari_resep
+pengen masak yang gampang,cari_resep
+"masakan apa ya yang enak buat makan siang",cari_resep
+bisa bikinin resep pasta,cari_resep
+resep ayam goreng yang krispy,cari_resep
+masakan yang cocok untuk diet,cari_resep_kondisi
+mau masak tapi gak boleh pake santan,cari_resep_pantangan
+aku alergi seafood,informasi_pantangan
+ga bisa makan pedas,informasi_preferensi
+diabetes jadi ga boleh makan manis,informasi_kondisi_kesehatan
+kolesterol tinggi nih,informasi_kondisi_kesehatan
+lagi program diet turun berat badan,informasi_kondisi_kesehatan
+"aku vegetarian, ga makan daging",informasi_kondisi_kesehatan
+asam urat jadi ga boleh makan bayam,informasi_kondisi_kesehatan
+hipertensi ga boleh banyak garam,informasi_kondisi_kesehatan
+pengen masak tapi tanpa minyak,cari_resep_pantangan
+gak mau pake msg,informasi_pantangan
+alergi susu jadi gabisa dairy,informasi_kondisi_kesehatan
+mau yang berkuah,informasi_preferensi
+pengen yang digoreng,informasi_preferensi
+masak yang dipanggang aja,informasi_preferensi
+mau yang direbus biar sehat,informasi_preferensi
+pengen yang seger seger,informasi_preferensi
+suka yang gurih,informasi_preferensi
+"pengen masak ayam tapi ga pake santan, buat diet",cari_resep_kompleks
+"mau bikin sayur, yang gampang aja, ga ribet",cari_resep_kompleks
+resep ikan yang cocok buat diabetes,cari_resep_kompleks
+"ada ga resep vegetarian yang tinggi protein",cari_resep_kompleks
+"masakan untuk kolesterol tinggi, yang enak",cari_resep_kompleks
+cariin resep tanpa gluten dong,cari_resep_kompleks
+"pengen masak udang tapi aku alergi, ada alternatif ga",tanya_alternatif
+"kalau ga ada ayam, bisa diganti apa",tanya_alternatif
+tempe bisa diganti tahu ga,tanya_alternatif
+santan bisa pakai apa ya sebagai pengganti,tanya_alternatif
+gula merah sama gula putih bedanya apa,tanya_informasi
+teknik menggoreng yang benar gimana,tanya_informasi
+cara masak nasi yang pulen,tanya_informasi
+beda tumis sama oseng apa,tanya_informasi
+kukus berapa lama biar matang,tanya_informasi
+terima kasih,chitchat
+makasih ya,chitchat
+oke siap,chitchat
+halo,chitchat
+hai,chitchat
+thanks,chitchat
+ok,chitchat
+iya,chitchat
+baik,chitchat
+gw mau masak ayam yg krispy bgt tapi gak pake tepung,cari_resep_kompleks
+"pengen bikin pasta carbonara tapi dairy free, gimana caranya",cari_resep_kompleks
+"ada resep sayur yang cocok buat anak kecil ga, yang ga pedes",cari_resep_kompleks
+"mau masak seafood tapi aku kolesterol, aman ga sih",cari_resep_kompleks
+bikin rendang tapi gak pake santan bisa ga,tanya_alternatif
+cariin masakan korea yang halal,cari_resep
+resep dessert yang low sugar,cari_resep_kondisi
+"mau masak buat buka puasa, yang seger",cari_resep_kompleks
+masakan jepang yang simple,cari_resep
+pengen nyoba bikin dimsum,cari_resep
+resep kue tanpa oven,cari_resep
+"masak apa ya kalo lagi hujan, yang anget anget",cari_resep_kompleks
+meal prep untuk seminggu,cari_resep
+resep sarapan yang cepet,cari_resep
+"mau masak romantis buat pacar, ada ide ga",cari_resep_kompleks
+ayam geprek level berapa pedasnya,tanya_informasi
+kalori nasi putih vs nasi merah,tanya_informasi
+kenapa rendang harus dimasak lama,tanya_informasi
+"gw lagi pengen makan yang pedes pedes, ada rekomendasi",cari_resep
+resep soup buat orang sakit,cari_resep_kondisi
+"udah bosen makan ayam mulu, ada alternatif protein lain ga",tanya_alternatif
+"anak ga suka sayur, gimana biar dia mau makan",tanya_informasi
+frozen food sehat ga sih,tanya_informasi
+cara nyimpen bumbu biar tahan lama,tanya_informasi
+"gw beli terlalu banyak tomat nih, bisa dibikin apa aja",cari_resep
+resep zero waste dari sisa sayuran,cari_resep
+meal prep yang hemat budget,cari_resep
+"masak pake rice cooker aja bisa ga, ga punya kompor",cari_resep_kompleks
+resep untuk bekal anak sekolah,cari_resep
+"mau ngajarin anak masak, resep yang aman buat anak",cari_resep_kompleks
+masakan yang bisa disimpen lama,cari_resep
+"bahan di kulkas tinggal telur sama bayam, bisa masak apa",cari_resep_kompleks
+"udah malam nih laper, ada resep yang cepet 15 menit aja",cari_resep_kompleks
+resep meal prep untuk gym,cari_resep_kondisi
+"besok lebaran mau masak apa ya, yang spesial",cari_resep_kompleks
+cara bikin nasi goreng yang ga keras,tanya_informasi
+kenapa makanan aku suka gosong,tanya_informasi
+beda garam himalaya sama garam biasa,tanya_informasi
+air fryer vs deep fry lebih sehat mana,tanya_informasi
+minyak goreng bisa dipakai berapa kali,tanya_informasi
+bumbu dasar putih itu apa aja sih,tanya_informasi
+cara cuci sayur yang bener,tanya_informasi
+cabe rawit vs cabe merah lebih pedes mana,tanya_informasi
+resep untuk penderita maag,cari_resep_kondisi
+masakan untuk ibu hamil yang mual,cari_resep_kondisi
+menu mpasi 6 bulan,cari_resep_kondisi
+resep untuk lansia yang susah mengunyah,cari_resep_kondisi
