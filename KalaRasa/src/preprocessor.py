@@ -7,7 +7,7 @@ from typing import Dict, List
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config.config import KB_NORMALIZATION
+from config import KB_NORMALIZATION
 
 
 class TextPreprocessor:
