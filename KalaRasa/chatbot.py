@@ -4,11 +4,13 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(BASE_DIR)
 
 import json
-from src.nlp_pipeline import RecipeNLPPipeline
+from src.enhanced_nlp_engine import EnhancedNLPEngine
 from src.recipe_matcher import RecipeMatcher
+from src.recipe_matcher_mysql import RecipeMatcherMySQL
 from colorama import init, Fore, Style
 
 # Initialize colorama untuk colored terminal output
@@ -26,8 +28,10 @@ class RecipeChatbot:
         """Initialize chatbot dengan NLP pipeline dan recipe matcher"""
         print(f"{Fore.CYAN}Initializing Recipe Chatbot...{Style.RESET_ALL}")
         try:
-            self.pipeline = RecipeNLPPipeline(load_models=True)
-            self.matcher = RecipeMatcher()
+            self.pipeline = EnhancedNLPEngine()
+            # Gunakan salah satu matcher, bukan keduanya
+            # self.matcher = RecipeMatcher()  # Non-MySQL
+            self.matcher = RecipeMatcherMySQL()  # MySQL
             self.conversation_history = []
             print(f"{Fore.GREEN}✓ Chatbot ready!{Style.RESET_ALL}\n")
         except Exception as e:
@@ -57,11 +61,26 @@ class RecipeChatbot:
     def format_response(self, result: dict, matched_recipes: list = None) -> str:
         """Format hasil NLP pipeline dan matched recipes menjadi response yang user-friendly"""
         
-        intent = result['intent']['primary']
-        confidence = result['intent']['confidence']
-        entities = result['entities']
-        
+        # ===== HANDLE FORMAT BARU & LAMA =====
+        if isinstance(result.get('intent'), dict):
+            # Format BARU
+            intent = result['intent'].get('primary', 'unknown')
+            confidence = result['intent'].get('confidence', 0.0)
+        else:
+            # Format LAMA / fallback
+            intent = result.get('intent', 'unknown')
+            confidence = result.get('confidence', 0.0)
+
+        entities = result.get('entities', {}) or {}
+        status = result.get('status', 'ok')
+        message = result.get('message', '')
+
         response = []
+
+        # ===== PESAN FALLBACK =====
+        if status != "ok":
+            response.append(f"{Fore.YELLOW}{message}{Style.RESET_ALL}")
+            return '\n'.join(response)
         
         # Header
         response.append(f"{Fore.GREEN}Saya mengerti!{Style.RESET_ALL}")
@@ -77,33 +96,34 @@ class RecipeChatbot:
         response.append(f"Intent terdeteksi: {conf_color}{intent}{Style.RESET_ALL} (confidence: {confidence:.2%})")
         
         # Main ingredients
-        if entities['ingredients']['main']:
+        if entities.get('ingredients', {}).get('main'):
             ingredients_str = ', '.join(entities['ingredients']['main'])
             response.append(f"\n{Fore.CYAN}Bahan utama:{Style.RESET_ALL} {ingredients_str}")
         
         # Ingredients to avoid
-        if entities['ingredients']['avoid']:
-            avoid_str = ', '.join(entities['ingredients']['avoid'][:5])
-            more = f" (+{len(entities['ingredients']['avoid'])-5} more)" if len(entities['ingredients']['avoid']) > 5 else ""
+        if entities.get('ingredients', {}).get('avoid'):
+            avoid_list = entities['ingredients']['avoid']
+            avoid_str = ', '.join(avoid_list[:5])
+            more = f" (+{len(avoid_list)-5} more)" if len(avoid_list) > 5 else ""
             response.append(f"{Fore.RED}Hindari:{Style.RESET_ALL} {avoid_str}{more}")
         
         # Cooking methods
-        if entities['cooking_methods']:
+        if entities.get('cooking_methods'):
             methods_str = ', '.join(entities['cooking_methods'])
             response.append(f"{Fore.CYAN}Teknik memasak:{Style.RESET_ALL} {methods_str}")
         
         # Health conditions
-        if entities['health_conditions']:
+        if entities.get('health_conditions'):
             conditions_str = ', '.join(entities['health_conditions'])
             response.append(f"{Fore.YELLOW}Kondisi kesehatan:{Style.RESET_ALL} {conditions_str}")
         
         # Taste preferences
-        if entities['taste_preferences']:
+        if entities.get('taste_preferences'):
             taste_str = ', '.join(entities['taste_preferences'])
             response.append(f"{Fore.MAGENTA}Preferensi rasa:{Style.RESET_ALL} {taste_str}")
         
         # Time constraint
-        if entities['time_constraint']:
+        if entities.get('time_constraint'):
             response.append(f"{Fore.CYAN}Batasan waktu:{Style.RESET_ALL} {entities['time_constraint']}")
         
         # Matched recipes section
@@ -121,11 +141,11 @@ class RecipeChatbot:
                 
                 # Show why it matched
                 details = matched['match_details']
-                if details['matched_ingredients']:
+                if details.get('matched_ingredients'):
                     response.append(f"   ✓ Bahan: {', '.join(details['matched_ingredients'][:3])}")
-                if details['matched_methods']:
+                if details.get('matched_methods'):
                     response.append(f"   ✓ Teknik: {', '.join(details['matched_methods'])}")
-                if details['matched_tastes']:
+                if details.get('matched_tastes'):
                     response.append(f"   ✓ Rasa: {', '.join(details['matched_tastes'])}")
         else:
             response.append(f"{Fore.YELLOW}⚠️  Tidak ada resep yang sesuai dengan kriteria Anda.{Style.RESET_ALL}")
@@ -149,8 +169,30 @@ class RecipeChatbot:
         
         print(f"{Fore.GREEN}Output saved to: {filepath}{Style.RESET_ALL}")
     
+    def process_user_input(self, user_input: str):
+        """Process one user input and return result"""
+        print(f"\n{Fore.YELLOW}Processing...{Style.RESET_ALL}")
+        result = self.pipeline.process(user_input)
+        
+        # Jika NLP gagal memahami, return error
+        if result.get("status") != "ok":
+            return {
+                "success": False,
+                "message": result.get("message", "Maaf, aku belum paham."),
+                "raw_result": result
+            }
+        
+        print(f"{Fore.YELLOW}Searching recipes...{Style.RESET_ALL}")
+        matched_recipes = self.matcher.match_recipes(result, top_k=5)
+        
+        return {
+            "success": True,
+            "raw_result": result,
+            "matched_recipes": matched_recipes
+        }
+    
     def run(self):
-        """Main chatbot loop"""
+        """Main chatbot loop dengan flow yang lebih natural"""
         self.print_welcome()
         
         while True:
@@ -180,13 +222,20 @@ class RecipeChatbot:
                         print(f"{Fore.RED}No conversation to save yet!{Style.RESET_ALL}")
                     continue
                 
-                # Process input through pipeline
-                print(f"\n{Fore.YELLOW}Processing...{Style.RESET_ALL}")
-                result = self.pipeline.process(user_input)
+                # Proses input user
+                process_result = self.process_user_input(user_input)
                 
-                # Match recipes
-                print(f"{Fore.YELLOW}Searching recipes...{Style.RESET_ALL}")
-                matched_recipes = self.matcher.match_recipes(result, top_k=5)
+                if not process_result["success"]:
+                    # Jika NLP tidak paham, tampilkan pesan error dan minta input ulang
+                    print(f"\n{Fore.CYAN}Bot:{Style.RESET_ALL}")
+                    print(process_result["message"])
+                    print(f"{Fore.YELLOW}Coba tanyakan dengan cara lain, atau contoh di atas.{Style.RESET_ALL}")
+                    print("\n" + "-"*80 + "\n")
+                    continue
+                
+                # Jika berhasil dipahami, tampilkan hasil
+                result = process_result["raw_result"]
+                matched_recipes = process_result["matched_recipes"]
                 
                 # Store in history
                 self.conversation_history.append({
@@ -199,12 +248,29 @@ class RecipeChatbot:
                 print(self.format_response(result, matched_recipes))
                 
                 # Option to see detail of a recipe
-                if matched_recipes:
-                    see_detail = input(f"\n{Fore.YELLOW}Lihat detail resep? (ketik nomor 1-{len(matched_recipes)}, atau tekan Enter untuk skip):{Style.RESET_ALL} ").strip()
-                    if see_detail.isdigit() and 1 <= int(see_detail) <= len(matched_recipes):
-                        idx = int(see_detail) - 1
-                        print(f"\n{Fore.CYAN}Detail Resep:{Style.RESET_ALL}")
-                        print(self.matcher.format_recipe_display(matched_recipes[idx]))
+                if matched_recipes and len(matched_recipes) > 0:
+                    while True:
+                        see_detail = input(f"\n{Fore.YELLOW}Lihat detail resep? (ketik nomor 1-{len(matched_recipes)}, 'ulang' untuk input baru, atau tekan Enter untuk skip):{Style.RESET_ALL} ").strip()
+                        
+                        if see_detail.lower() == 'ulang':
+                            print(f"{Fore.CYAN}Silakan tanyakan lagi...{Style.RESET_ALL}")
+                            break  # Keluar dari loop detail, kembali ke input utama
+                        
+                        if not see_detail:
+                            # Skip melihat detail
+                            break
+                        
+                        if see_detail.isdigit() and 1 <= int(see_detail) <= len(matched_recipes):
+                            idx = int(see_detail) - 1
+                            print(f"\n{Fore.CYAN}Detail Resep:{Style.RESET_ALL}")
+                            print(self.matcher.format_recipe_display(matched_recipes[idx]))
+                            
+                            # Tanya apakah ingin melihat detail resep lain
+                            another = input(f"\n{Fore.YELLOW}Lihat detail resep lain? (y/n):{Style.RESET_ALL} ").strip().lower()
+                            if another != 'y':
+                                break
+                        else:
+                            print(f"{Fore.RED}Input tidak valid. Masukkan angka 1-{len(matched_recipes)} atau 'ulang'.{Style.RESET_ALL}")
                 
                 # Option to see raw JSON
                 see_json = input(f"\n{Fore.YELLOW}Lihat JSON output? (y/n):{Style.RESET_ALL} ").strip().lower()
@@ -213,13 +279,14 @@ class RecipeChatbot:
                     print(json.dumps(result, indent=2, ensure_ascii=False))
                 
                 print("\n" + "-"*80 + "\n")
+                print(f"{Fore.CYAN}Apa lagi yang bisa saya bantu?{Style.RESET_ALL}")
                 
             except KeyboardInterrupt:
                 print(f"\n\n{Fore.YELLOW}Interrupted by user. Exiting...{Style.RESET_ALL}")
                 break
             except Exception as e:
                 print(f"\n{Fore.RED}Error: {e}{Style.RESET_ALL}")
-                print(f"{Fore.YELLOW}Please try again.{Style.RESET_ALL}\n")
+                print(f"{Fore.YELLOW}Silakan coba lagi.{Style.RESET_ALL}\n")
 
 
 def main():

@@ -12,6 +12,7 @@
     <OutputPath>.</OutputPath>
     <Name>KalaRasa</Name>
     <RootNamespace>KalaRasa</RootNamespace>
+    <TestFramework>Pytest</TestFramework>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -24,12 +25,13 @@
   <ItemGroup>
     <Compile Include="chatbot.py" />
     <Compile Include="config\config.py" />
-    <Compile Include="demo.py" />
+    <Compile Include="config\database.py" />
+    <Compile Include="src\database_connector.py" />
+    <Compile Include="src\nlp_pipeline.py" />
     <Compile Include="src\intent_classifier.py" />
     <Compile Include="src\ner_extractor.py" />
-    <Compile Include="src\nlp_pipeline.py" />
     <Compile Include="src\preprocessor.py" />
-    <Compile Include="test_all.py" />
+    <Compile Include="src\recipe_matcher_mysql.py" />
     <Compile Include="train_model.py" />
   </ItemGroup>
   <ItemGroup>
@@ -41,7 +43,6 @@
     <Folder Include="src\__pycache__\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="API_DOCUMENTATION.md" />
     <Content Include="config\__pycache__\config.cpython-312.pyc" />
     <Content Include="data\intent_dataset.csv" />
     <Content Include="data\knowledge_base_cooking_methods.json" />
@@ -49,12 +50,8 @@
     <Content Include="data\knowledge_base_ingredients.json" />
     <Content Include="data\knowledge_base_normalization.json" />
     <Content Include="data\ner_dataset.csv" />
-    <Content Include="data\recipe_database.json" />
     <Content Include="models\intent_classifier.pkl" />
     <Content Include="models\tfidf_vectorizer.pkl" />
-    <Content Include="PROJECT_SUMMARY.md" />
-    <Content Include="QUICKSTART.md" />
-    <Content Include="README.md" />
     <Content Include="requirements.txt" />
     <Content Include="src\__pycache__\intent_classifier.cpython-312.pyc" />
     <Content Include="src\__pycache__\ner_extractor.cpython-312.pyc" />
