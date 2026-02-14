@@ -9,7 +9,6 @@ sys.path.append(BASE_DIR)
 
 import json
 from src.enhanced_nlp_engine import EnhancedNLPEngine
-from src.recipe_matcher import RecipeMatcher
 from src.recipe_matcher_mysql import RecipeMatcherMySQL
 from colorama import init, Fore, Style
 
@@ -29,8 +28,6 @@ class RecipeChatbot:
         print(f"{Fore.CYAN}Initializing Recipe Chatbot...{Style.RESET_ALL}")
         try:
             self.pipeline = EnhancedNLPEngine()
-            # Gunakan salah satu matcher, bukan keduanya
-            # self.matcher = RecipeMatcher()  # Non-MySQL
             self.matcher = RecipeMatcherMySQL()  # MySQL
             self.conversation_history = []
             print(f"{Fore.GREEN}✓ Chatbot ready!{Style.RESET_ALL}\n")
@@ -142,7 +139,12 @@ class RecipeChatbot:
                 # Show why it matched
                 details = matched['match_details']
                 if details.get('matched_ingredients'):
-                    response.append(f"   ✓ Bahan: {', '.join(details['matched_ingredients'][:3])}")
+                # Ekstrak field 'user' dari setiap dictionary
+                    matched_ings_display = [
+                    match['user'] if isinstance(match, dict) else str(match)
+                    for match in details['matched_ingredients'][:3]
+                ]
+                response.append(f"   ✓ Bahan: {', '.join(matched_ings_display)}")
                 if details.get('matched_methods'):
                     response.append(f"   ✓ Teknik: {', '.join(details['matched_methods'])}")
                 if details.get('matched_tastes'):

@@ -513,5 +513,7 @@ if __name__ == '__main__':
     print("  GET    /api/analytics/popular-recipes")
     print("\nServer starting on http://0.0.0.0:5000")
     print("="*60 + "\n")
+    print("FLASK API LOADED")
+
     
     app.run(host='0.0.0.0', port=5000, debug=True)

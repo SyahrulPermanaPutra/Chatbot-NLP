@@ -1,4 +1,4 @@
-# src/ner_extractor.py
+﻿# src/ner_extractor.py
 # Named Entity Recognition untuk ekstraksi entities dari input
 
 import json
@@ -43,13 +43,34 @@ class NERExtractor:
             return {}
     
     def _build_ingredient_lookup(self) -> Dict[str, str]:
-        """Build flat dictionary untuk ingredient lookup"""
+        """Build flat dictionary untuk ingredient lookup - FIXED"""
         lookup = {}
+    
+        if not self.kb_ingredients:
+            print("WARNING: kb_ingredients is empty!")
+            return lookup
+    
         for category, subcategories in self.kb_ingredients.items():
+            if not subcategories:
+                continue
+            
             for subcat, items in subcategories.items():
+                if not items:
+                    continue
+                
                 for item in items:
-                    lookup[item.lower()] = category
-        return lookup
+                    if item:  # Pastikan tidak None atau empty
+                        lookup[item.lower()] = category
+    
+        print(f"NER: Loaded {len(lookup)} ingredient mappings")
+        # Debug: Check important ingredients
+        for test_ing in ['ayam', 'ikan', 'sapi', 'tempe']:
+            if test_ing in lookup:
+                print(f"NER: ✓ '{test_ing}' mapped to {lookup[test_ing]}")
+            else:
+                print(f"NER: ✗ '{test_ing}' NOT in lookup!")
+    
+                return lookup    
     
     def _build_cooking_lookup(self) -> Dict[str, str]:
         """Build flat dictionary untuk cooking method lookup"""
@@ -81,14 +102,11 @@ class NERExtractor:
                 lookup[keyword.lower()] = taste
         return lookup
     
-    def extract_ingredients(self, text: str) -> Dict[str, List[str]]:
-        """
-        Extract ingredients dari text
-        Returns: Dict dengan main, additional, dan avoid ingredients
-        """
+    def extract_ingredients(self, text, avoid_ingredients=None):
+       if avoid_ingredients is None:
+        avoid_ingredients = []    
         words = text.split()
         main_ingredients = []
-        avoid_ingredients = []
         
         # Pattern untuk mendeteksi ingredients yang harus dihindari
         avoid_patterns = [

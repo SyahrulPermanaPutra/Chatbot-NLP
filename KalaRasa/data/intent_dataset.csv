@@ -673,3 +673,272 @@ ada maag ga boleh apa,informasi_kondisi_kesehatan
 cara tumis yang benar gimana,tanya_informasi
 nutrisi kwetiau,tanya_informasi
 aku diabetes,informasi_kondisi_kesehatan
+1,chitchat
+2,chitchat
+3,chitchat
+4,chitchat
+5,chitchat
+satu,chitchat
+dua,chitchat
+tiga,chitchat
+nomor 1,chitchat
+nomor 2,chitchat
+pilih 1,chitchat
+pilih 2,chitchat
+ayam,cari_resep
+ikan,cari_resep
+sapi,cari_resep
+tempe,cari_resep
+tahu,cari_resep
+nasi,cari_resep
+mie,cari_resep
+pasta,cari_resep
+makan,cari_resep
+masak,cari_resep
+bikin,cari_resep
+buat,cari_resep
+resep,cari_resep
+mau ayam,cari_resep
+pengen ikan,cari_resep
+ingin tempe,cari_resep
+halo,chitchat
+hai,chitchat
+hi,chitchat
+hello,chitchat
+iya,chitchat
+ya,chitchat
+tidak,chitchat
+ga,chitchat
+gak,chitchat
+ok,chitchat
+oke,chitchat
+sip,chitchat
+baik,chitchat
+makasih,chitchat
+terima kasih,chitchat
+thanks,chitchat
+dadah,chitchat
+bye,chitchat
+dah,chitchat
+ayo makan,cari_resep
+mau makan,cari_resep
+pengen makan,cari_resep
+makan ayam,cari_resep
+masak ayam,cari_resep
+resep ayam,cari_resep
+ikan bakar,cari_resep
+ayam goreng,cari_resep
+tempe goreng,cari_resep
+masak apa,cari_resep
+mau masak,cari_resep
+bikin apa,cari_resep
+mau,cari_resep
+pengen,cari_resep
+ingin,cari_resep
+apa ini,tanya_informasi
+ini apa,tanya_informasi
+apa itu,tanya_informasi
+gimana,tanya_informasi
+bagaimana,tanya_informasi
+caranya,tanya_informasi
+bahan,tanya_informasi
+bumbu,tanya_informasi
+alat,tanya_informasi
+berapa,tanya_informasi
+berapa lama,tanya_informasi
+gimana caranya,tanya_informasi
+mkan,chitchat
+msak,chitchat
+resep2,chitchat
+resepnya,cari_resep
+gmna,tanya_informasi
+gmana,tanya_informasi
+gmn,tanya_informasi
+diabetes,informasi_kondisi_kesehatan
+asam urat,informasi_kondisi_kesehatan
+kolesterol,informasi_kondisi_kesehatan
+hipertensi,informasi_kondisi_kesehatan
+maag,informasi_kondisi_kesehatan
+alergi,informasi_kondisi_kesehatan
+vegetarian,informasi_kondisi_kesehatan
+diet,informasi_kondisi_kesehatan
+gula,informasi_kondisi_kesehatan
+garam,informasi_kondisi_kesehatan
+minyak,informasi_kondisi_kesehatan
+santan,informasi_kondisi_kesehatan
+msg,informasi_kondisi_kesehatan
+mentega,informasi_kondisi_kesehatan
+keju,informasi_kondisi_kesehatan
+tepung,informasi_kondisi_kesehatan
+kacang,informasi_kondisi_kesehatan
+susu,informasi_kondisi_kesehatan
+ayam goreng,cari_resep
+ikan bakar,cari_resep
+tempe goreng,cari_resep
+tahu goreng,cari_resep
+nasi goreng,cari_resep
+mie goreng,cari_resep
+pasta rebus,cari_resep
+sapi bakar,cari_resep
+kambing gulai,cari_resep
+udang bakar,cari_resep
+cumi goreng,cari_resep
+salmon panggang,cari_resep
+tuna bakar,cari_resep
+wortel rebus,cari_resep
+brokoli kukus,cari_resep
+kentang goreng,cari_resep
+jagung bakar,cari_resep
+bayam tumis,cari_resep
+kangkung tumis,cari_resep
+kwetiau goreng,cari_resep
+bihun goreng,cari_resep
+telur goreng,cari_resep
+daging bakar,cari_resep
+pedas,cari_resep_kompleks
+manis,cari_resep_kompleks
+asin,cari_resep_kompleks
+gurih,cari_resep_kompleks
+asam,cari_resep_kompleks
+segar,cari_resep_kompleks
+lembut,cari_resep_kompleks
+renyah,cari_resep_kompleks
+crispy,cari_resep_kompleks
+empuk,cari_resep_kompleks
+cepat,cari_resep_kompleks
+mudah,cari_resep_kompleks
+simple,cari_resep_kompleks
+goreng,cari_resep_kompleks
+rebus,cari_resep_kompleks
+panggang,cari_resep_kompleks
+bakar,cari_resep_kompleks
+tumis,cari_resep_kompleks
+kukus,cari_resep_kompleks
+oseng,cari_resep_kompleks
+pepes,cari_resep_kompleks
+gulai,cari_resep_kompleks
+rica rica,cari_resep_kompleks
+balado,cari_resep_kompleks
+rendang,cari_resep_kompleks
+tanpa gula,cari_resep_kompleks
+tanpa garam,cari_resep_kompleks
+tanpa minyak,cari_resep_kompleks
+tanpa santan,cari_resep_kompleks
+tanpa msg,cari_resep_kompleks
+tanpa mentega,cari_resep_kompleks
+tanpa keju,cari_resep_kompleks
+tanpa tepung,cari_resep_kompleks
+tanpa kacang,cari_resep_kompleks
+tanpa susu,cari_resep_kompleks
+untuk diabetes,cari_resep_kompleks
+untuk asam urat,cari_resep_kompleks
+untuk kolesterol,cari_resep_kompleks
+untuk hipertensi,cari_resep_kompleks
+untuk maag,cari_resep_kompleks
+untuk alergi,cari_resep_kompleks
+untuk vegetarian,cari_resep_kompleks
+untuk diet,cari_resep_kompleks
+ganti ayam,tanya_alternatif
+ganti ikan,tanya_alternatif
+ganti tempe,tanya_alternatif
+ganti tahu,tanya_alternatif
+ganti nasi,tanya_alternatif
+ganti mie,tanya_alternatif
+ganti pasta,tanya_alternatif
+pengganti ayam,tanya_alternatif
+pengganti ikan,tanya_alternatif
+pengganti tempe,tanya_alternatif
+pengganti tahu,tanya_alternatif
+pengganti nasi,tanya_alternatif
+pengganti mie,tanya_alternatif
+pengganti pasta,tanya_alternatif
+substitusi ayam,tanya_alternatif
+substitusi ikan,tanya_alternatif
+substitusi tempe,tanya_alternatif
+substitusi tahu,tanya_alternatif
+substitusi nasi,tanya_alternatif
+substitusi mie,tanya_alternatif
+substitusi pasta,tanya_alternatif
+kalori ayam,tanya_informasi
+kalori ikan,tanya_informasi
+kalori tempe,tanya_informasi
+kalori tahu,tanya_informasi
+kalori nasi,tanya_informasi
+kalori mie,tanya_informasi
+kalori pasta,tanya_informasi
+nutrisi ayam,tanya_informasi
+nutrisi ikan,tanya_informasi
+nutrisi tempe,tanya_informasi
+nutrisi tahu,tanya_informasi
+nutrisi nasi,tanya_informasi
+nutrisi mie,tanya_informasi
+nutrisi pasta,tanya_informasi
+kandungan ayam,tanya_informasi
+kandungan ikan,tanya_informasi
+kandungan tempe,tanya_informasi
+kandungan tahu,tanya_informasi
+kandungan nasi,tanya_informasi
+kandungan mie,tanya_informasi
+kandungan pasta,tanya_informasi
+cara masak ayam,tanya_informasi
+cara masak ikan,tanya_informasi
+cara masak tempe,tanya_informasi
+cara masak tahu,tanya_informasi
+cara masak nasi,tanya_informasi
+cara masak mie,tanya_informasi
+cara masak pasta,tanya_informasi
+bedanya goreng dan bakar,tanya_informasi
+bedanya rebus dan kukus,tanya_informasi
+bedanya tumis dan oseng,tanya_informasi
+bedanya panggang dan bakar,tanya_informasi
+bedanya pepes dan kukus,tanya_informasi
+bedanya gulai dan rendang,tanya_informasi
+bedanya rica rica dan balado,tanya_informasi
+pantangan diabetes,informasi_kondisi_kesehatan
+pantangan asam urat,informasi_kondisi_kesehatan
+pantangan kolesterol,informasi_kondisi_kesehatan
+pantangan hipertensi,informasi_kondisi_kesehatan
+pantangan maag,informasi_kondisi_kesehatan
+pantangan alergi,informasi_kondisi_kesehatan
+pantangan vegetarian,informasi_kondisi_kesehatan
+pantangan diet,informasi_kondisi_kesehatan
+boleh makan apa diabetes,informasi_kondisi_kesehatan
+boleh makan apa asam urat,informasi_kondisi_kesehatan
+boleh makan apa kolesterol,informasi_kondisi_kesehatan
+boleh makan apa hipertensi,informasi_kondisi_kesehatan
+boleh makan apa maag,informasi_kondisi_kesehatan
+boleh makan apa alergi,informasi_kondisi_kesehatan
+boleh makan apa vegetarian,informasi_kondisi_kesehatan
+boleh makan apa diet,informasi_kondisi_kesehatan
+lagi diabetes,informasi_kondisi_kesehatan
+lagi asam urat,informasi_kondisi_kesehatan
+lagi kolesterol,informasi_kondisi_kesehatan
+lagi hipertensi,informasi_kondisi_kesehatan
+lagi maag,informasi_kondisi_kesehatan
+lagi alergi,informasi_kondisi_kesehatan
+lagi vegetarian,informasi_kondisi_kesehatan
+lagi diet,informasi_kondisi_kesehatan
+punya diabetes,informasi_kondisi_kesehatan
+punya asam urat,informasi_kondisi_kesehatan
+punya kolesterol,informasi_kondisi_kesehatan
+punya hipertensi,informasi_kondisi_kesehatan
+punya maag,informasi_kondisi_kesehatan
+punya alergi,informasi_kondisi_kesehatan
+punya vegetarian,informasi_kondisi_kesehatan
+punya diet,informasi_kondisi_kesehatan
+saya diabetes,informasi_kondisi_kesehatan
+saya asam urat,informasi_kondisi_kesehatan
+saya kolesterol,informasi_kondisi_kesehatan
+saya hipertensi,informasi_kondisi_kesehatan
+saya maag,informasi_kondisi_kesehatan
+saya alergi,informasi_kondisi_kesehatan
+saya vegetarian,informasi_kondisi_kesehatan
+saya diet,informasi_kondisi_kesehatan
+aku diabetes,informasi_kondisi_kesehatan
+aku asam urat,informasi_kondisi_kesehatan
+aku kolesterol,informasi_kondisi_kesehatan
+aku hipertensi,informasi_kondisi_kesehatan
+aku maag,informasi_kondisi_kesehatan
+aku alergi,informasi_kondisi_kesehatan
+aku vegetarian,informasi_kondisi_kesehatan
+aku diet,informasi_kondisi_kesehatan

@@ -35,12 +35,17 @@ class IntentClassifier:
         return df
     
     def train(self, df: pd.DataFrame, test_size: float = 0.2):
+    # Augmentasi data sebelum split
+        print("\n[0/5] Augmenting data...")
+        df = self._augment_data(df)
+        
         """
         Train intent classifier
         Args:
             df: DataFrame with 'text' and 'intent' columns
             test_size: Proportion of test set
         """
+        
         # Preprocess texts
         print("\n[1/5] Preprocessing texts...")
         df['processed_text'] = df['text'].apply(
@@ -90,7 +95,49 @@ class IntentClassifier:
             'y_test': y_test,
             'y_pred': y_pred
         }
+
+    def _augment_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Simple data augmentation"""
+        augmented = []
     
+        for _, row in df.iterrows():
+            text = row['text']
+            intent = row['intent']
+        
+            # Tambahkan original
+            augmented.append({'text': text, 'intent': intent})
+        
+            # Augmentasi untuk semua class kecuali mungkin chitchat
+            if intent != 'chitchat':
+                # 1. Hapus kata filler
+                words = text.split()
+                if len(words) > 3:
+                    # Buat versi tanpa kata filler
+                    filler_words = ['yang', 'dengan', 'untuk', 'agar', 'supaya']
+                    filtered = [w for w in words if w not in filler_words]
+                    if len(filtered) >= 2:
+                        augmented.append({'text': ' '.join(filtered), 'intent': intent})
+            
+                # 2. Tambahkan sinonim sederhana
+                synonyms = {
+                    'mau': ['pengen', 'ingin', 'kepingin'],
+                    'masak': ['bikin', 'buat', 'memasak'],
+                    'resep': ['resep masakan', 'cara membuat'],
+                    'ayam': ['daging ayam', 'ayamnya'],
+                    'ikan': ['ikan segar', 'ikannya'],
+                    'cepat': ['cepet', 'tak lama', 'singkat']
+                }
+            
+                # Ganti kata dengan sinonim (satu kali per sample)
+                for word, syns in synonyms.items():
+                    if word in text:
+                        for syn in syns[:1]:  # Ambil satu sinonim saja
+                            new_text = text.replace(word, syn)
+                            augmented.append({'text': new_text, 'intent': intent})
+                            break
+    
+        return pd.DataFrame(augmented)
+
     def predict(self, text: str, top_k: int = 3):
         """
         Predict intent dari input text

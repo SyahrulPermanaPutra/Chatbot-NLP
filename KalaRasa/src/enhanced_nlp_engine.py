@@ -22,7 +22,7 @@ class EnhancedNLPEngine:
     """
     
     # Confidence thresholds
-    MIN_CONFIDENCE = 0.60
+    MIN_CONFIDENCE = 0.35  
     
     # Status codes
     STATUS_OK = "ok"
@@ -66,23 +66,60 @@ class EnhancedNLPEngine:
     
     def process(self, user_input: str) -> Dict:
         """
-        Main processing function dengan safety checks
-        
-        Returns:
-            Structured JSON dengan status, intent, entities, action, message
+        Main processing function dengan improvements
         """
         try:
-            # Step 1: Gibberish detection
-            if self._is_gibberish(user_input):
+            # Step 0: Handle empty/single character
+            if not user_input or len(user_input.strip()) == 0:
                 return self._create_response(
                     status=self.STATUS_FALLBACK,
                     intent="unknown",
                     confidence=0.0,
                     entities={},
-                    action=self.ACTION_REJECT_INPUT,
-                    message="Aku belum bisa memahami teksnya 😅 Coba tulis dengan kalimat sederhana, misalnya: 'mau masak ayam yang cepat'"
+                    action=self.ACTION_ASK_CLARIFICATION,
+                    message="Silakan tanyakan sesuatu tentang resep masakan 😊"
                 )
             
+            # Step 0.5: Coba handle input sederhana dulu
+            simple_response = self._handle_simple_input(user_input, user_input.lower())
+            if simple_response:
+                return simple_response
+            
+            # Step 1: Gibberish detection (yang sudah diperbaiki)
+            if self._is_gibberish(user_input):
+                # Tapi coba dulu dengan preprocessing
+                preprocessed = self.preprocessor.preprocess(user_input)
+                normalized_text = preprocessed['normalized']
+            
+                # Coba klasifikasi meski dianggap gibberish
+                intent_result = self.intent_classifier.predict(normalized_text)
+            
+                if intent_result['confidence'] > 0.3:  # Threshold rendah
+                    # Lanjutkan processing
+                    intent = intent_result['primary']
+                    confidence = intent_result['confidence']
+                
+                    # Skip ke entity extraction
+                    entities = self.ner_extractor.extract_all(normalized_text)
+                
+                    return self._create_response(
+                        status=self.STATUS_OK,
+                        intent=intent,
+                        confidence=confidence,
+                        entities=entities,
+                        action=self.ACTION_MATCH_RECIPE,
+                        message="Mencari resep sesuai permintaan..."
+                    )
+                else:
+                    return self._create_response(
+                        status=self.STATUS_FALLBACK,
+                        intent="unknown",
+                        confidence=0.0,
+                        entities={},
+                        action=self.ACTION_REJECT_INPUT,
+                        message="Aku belum bisa memahami maksud kamu 😅 Coba tulis dengan kalimat sederhana, misalnya: 'mau masak ayam' atau 'resep ikan'"
+                    )
+
             # Step 2: Preprocessing
             preprocessed = self.preprocessor.preprocess(user_input)
             normalized_text = preprocessed['normalized']
@@ -158,49 +195,93 @@ class EnhancedNLPEngine:
             )
     
     def _is_gibberish(self, text: str) -> bool:
-        """
-        Detect gibberish/invalid input
-        
-        Rules:
-        1. Alphabet ratio < 50%
-        2. No recognized words
-        3. Too short (< 2 meaningful words)
-        4. Only symbols/numbers
-        """
         try:
-            # Rule 1: Check alphabet ratio
+           text = text.strip()
+        
+            # Rule 0: Angka saja tidak dianggap gibberish (bisa jadi "1", "2", dll)
+           if text.isdigit():
+            return False
+            
+            # Rule 1: Check minimum length (jangan terlalu ketat)
+            if len(text) < 2:  # 1 karakter pasti gibberish
+                return True
+            
+            # Rule 2: Check alphabet ratio (lebih longgar)
             alpha_chars = sum(c.isalpha() for c in text)
             total_chars = len(text.replace(' ', ''))
-            
+        
             if total_chars == 0:
                 return True
             
             alpha_ratio = alpha_chars / total_chars
-            if alpha_ratio < 0.5:
+            if alpha_ratio < 0.3:  # Turun dari 0.5 menjadi 0.3
                 return True
             
-            # Rule 2 & 3: Check meaningful words
+            # Rule 3: Check meaningful words (lebih permisif)
             words = text.lower().split()
-            
-            # Filter out very short words
+        
+            # Filter out very short words (toleransi lebih tinggi)
             meaningful_words = [w for w in words if len(w) >= 2]
+        
+            # Untuk input sangat pendek, lebih toleran
+            if len(words) == 1 and len(words[0]) >= 3:
+                return False
             
-            if len(meaningful_words) < 2:
+            if len(meaningful_words) < 1:  # Turun dari 2 menjadi 1
                 return True
             
-            # Rule 4: Check if only symbols/numbers
-            if re.match(r'^[^a-zA-Z]+$', text):
-                return True
-            
-            # Check if words are recognized (simple vocabulary check)
+            # Rule 4: Check vocabulary recognition (lebih rendah threshold)
             recognized = self._check_vocabulary_recognition(meaningful_words)
-            if recognized < 0.3:  # Less than 30% words recognized
+            if recognized < 0.2:  # Turun dari 0.3 menjadi 0.2
                 return True
             
             return False
+        
         except Exception as e:
             print(f"Error in _is_gibberish: {e}")
-            return False  # If error, assume it's not gibberish
+            return False  # Jika error, berikan benefit of doubt
+
+    # Tambahkan method untuk handle input pendek/sederhana
+    def _handle_simple_input(self, text: str, normalized_text: str) -> Optional[Dict]:
+        """
+        Handle input yang sangat pendek/sederhana dengan logika khusus
+        """
+        simple_keywords = {
+            # Kata kunci -> intent
+            'ayam': 'cari_resep',
+            'ikan': 'cari_resep', 
+            'sapi': 'cari_resep',
+            'tempe': 'cari_resep',
+            'tahu': 'cari_resep',
+            'nasi': 'cari_resep',
+            'mie': 'cari_resep',
+            'pasta': 'cari_resep',
+            'makan': 'cari_resep',
+            'masak': 'cari_resep',
+            'resep': 'cari_resep',
+            'bikin': 'cari_resep',
+            'buat': 'cari_resep',
+            'mau': 'cari_resep',
+            'pengen': 'cari_resep',
+            'ingin': 'cari_resep',
+        }
+    
+        words = normalized_text.split()
+    
+        # Cek jika ada kata kunci sederhana
+        for word in words:
+            if word in simple_keywords:
+                return self._create_response(
+                    status=self.STATUS_OK,
+                    intent=simple_keywords[word],
+                    confidence=0.65,  # Confidence cukup
+                    entities={'ingredients': {'main': [word] if word in ['ayam', 'ikan', 'sapi', 'tempe', 'tahu'] else []}},
+                    action=self.ACTION_MATCH_RECIPE,
+                    message="Mencari resep..."
+                )
+    
+        return None
+
     
     def _check_vocabulary_recognition(self, words: List[str]) -> float:
         """
