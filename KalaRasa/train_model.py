@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # train_model.py
 # Script untuk training intent classifier
 
@@ -8,7 +7,6 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from src.intent_classifier import IntentClassifier
 from config.config import MODEL_DIR, INTENT_DATASET
-import pandas as pd
 
 
 def main():
@@ -54,24 +52,5 @@ def main():
     print(f"  - {MODEL_DIR}/tfidf_vectorizer.pkl")
     print()
     
-    # Test predictions
-    print("Testing with sample inputs:")
-    print("-"*80)
-    
-    test_samples = [
-        "mau masak ayam goreng yang crispy",
-        "aku diabetes ga boleh gula",
-        "pengen yang pedas banget"
-    ]
-    
-    for sample in test_samples:
-        pred = classifier.predict(sample)
-        print(f"Input: {sample}")
-        print(f"  → Intent: {pred['primary']} (confidence: {pred['confidence']:.3f})")
-    
-    print()
-    print("Training complete! You can now run the chatbot.")
-
-
 if __name__ == "__main__":
     main()

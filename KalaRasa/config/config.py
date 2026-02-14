@@ -16,13 +16,21 @@ KB_NORMALIZATION = os.path.join(DATA_DIR, 'knowledge_base_normalization.json')
 
 # Dataset paths
 INTENT_DATASET = os.path.join(DATA_DIR, 'intent_dataset.csv')
-NER_DATASET = os.path.join(DATA_DIR, 'ner_dataset.csv')
-RECIPE_DATABASE = os.path.join(DATA_DIR, 'recipe_database.json')
 
 # Model paths
 INTENT_MODEL = os.path.join(MODEL_DIR, 'intent_classifier.pkl')
 VECTORIZER_MODEL = os.path.join(MODEL_DIR, 'tfidf_vectorizer.pkl')
 NER_MODEL = os.path.join(MODEL_DIR, 'ner_model.pkl')
+
+#Config database
+MYSQL_CONFIG = {
+    'host': 'localhost',
+    'user': 'root',
+    'password': '',  
+    'database': 'kala_rasa_jtv',
+    'charset': 'utf8mb4',
+    'use_unicode': True
+}
 
 # Intent labels
 INTENT_LABELS = [

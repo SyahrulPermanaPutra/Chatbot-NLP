@@ -24,19 +24,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="api\flask_api.py" />
-    <Compile Include="chatbot.py" />
     <Compile Include="config\config.py" />
-    <Compile Include="config\database.py" />
     <Compile Include="config\__init__.py" />
-    <Compile Include="scripts\train.py" />
     <Compile Include="src\conversational_ai.py" />
-    <Compile Include="src\database_connector.py" />
     <Compile Include="src\enhanced_nlp_engine.py" />
     <Compile Include="src\intent_classifier.py" />
     <Compile Include="src\ner_extractor.py" />
     <Compile Include="src\preprocessor.py" />
-    <Compile Include="src\recipe_matcher.py" />
-    <Compile Include="src\recipe_matcher_mysql.py" />
     <Compile Include="src\__init__.py" />
     <Compile Include="train_model.py" />
   </ItemGroup>
@@ -46,18 +40,17 @@
     <Folder Include="data\" />
     <Folder Include="models\" />
     <Folder Include="api\" />
-    <Folder Include="scripts\" />
     <Folder Include="src\" />
     <Folder Include="src\__pycache__\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include=".env.txt" />
     <Content Include="config\__pycache__\config.cpython-312.pyc" />
     <Content Include="data\intent_dataset.csv" />
     <Content Include="data\knowledge_base_cooking_methods.json" />
     <Content Include="data\knowledge_base_health_conditions.json" />
     <Content Include="data\knowledge_base_ingredients.json" />
     <Content Include="data\knowledge_base_normalization.json" />
-    <Content Include="data\recipe_database.json" />
     <Content Include="models\intent_classifier.pkl" />
     <Content Include="models\tfidf_vectorizer.pkl" />
     <Content Include="requirements.txt" />

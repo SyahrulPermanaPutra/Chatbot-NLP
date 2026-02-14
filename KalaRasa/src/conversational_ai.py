@@ -9,8 +9,6 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.enhanced_nlp_engine import EnhancedNLPEngine
-from src.recipe_matcher_mysql import RecipeMatcherMySQL
-from src.database_connector import DatabaseConnector
 
 
 class ConversationContext:
@@ -98,28 +96,14 @@ class ConversationContext:
 
 class ConversationalAI:
     """
-    Advanced Conversational AI untuk Recipe Chatbot
-    Features:
-    - Multi-turn conversation
-    - Context memory
-    - Smart clarification
-    - Natural responses
-    - Intent chaining
+    Conversational AI - NLP ONLY Version
+    - NO recipe matching
+    - Only NLP processing and context management
     """
     
     def __init__(self, db_config: Dict = None):
         """Initialize conversational AI"""
         self.nlp_engine = EnhancedNLPEngine()
-        
-        if db_config:
-            self.matcher = RecipeMatcherMySQL(db_config)
-            self.db = DatabaseConnector(db_config)
-            self.db.connect()
-        else:
-            # Fallback to JSON-based matcher
-            from src.recipe_matcher import RecipeMatcher
-            self.matcher = RecipeMatcher()
-            self.db = None
         
         self.conversations = {}  # user_id -> ConversationContext
         
@@ -132,126 +116,38 @@ class ConversationalAI:
         return self.conversations[user_id]
     
     def process_message(self, user_id: str, message: str) -> Dict:
-        """
-        Process user message dalam conversational context
         
-        Returns:
-            {
-                'response': str,  # Natural language response
-                'recipes': List[Dict],  # Matched recipes (if any)
-                'suggestions': List[str],  # Suggested actions
-                'context_updated': bool
-            }
-        """
         context = self.get_or_create_context(user_id)
         
-        # Handle pending clarification first
-        if context.pending_clarification:
-            return self._handle_clarification_response(user_id, message, context)
-        
-        # Process with NLP
+       # Process with NLP
         nlp_result = self.nlp_engine.process(message)
         
         # Update context with new entities
         if nlp_result.get('entities'):
             context.update_entities(nlp_result['entities'])
         
-        # Generate response based on action
-        if nlp_result['action'] == 'match_recipe':
-            response_data = self._handle_recipe_search(user_id, context, nlp_result)
-        
-        elif nlp_result['action'] == 'ask_clarification':
-            response_data = self._handle_clarification(user_id, context, nlp_result)
-        
-        elif nlp_result['action'] == 'reject_input':
-            response_data = self._handle_rejection(user_id, context, nlp_result)
-        
-        else:
-            response_data = self._handle_general(user_id, context, nlp_result)
-        
         # Add to conversation history
         context.add_turn(
             user_message=message,
-            bot_response=response_data['response'],
+            bot_response=nlp_result.get('message', ''),
             nlp_result=nlp_result
         )
         
-        # Log to database if available
-        if self.db:
-            self._log_conversation(user_id, message, nlp_result, response_data)
-        
-        return response_data
-    
-    def _handle_recipe_search(
-        self, 
-        user_id: str, 
-        context: ConversationContext,
-        nlp_result: Dict
-    ) -> Dict:
-        """Handle recipe search with context"""
-        
-        # Create enhanced NLP output with context
-        enhanced_output = nlp_result.copy()
-        enhanced_output['entities'] = context.collected_entities
-        
-        # Search recipes
-        matches = self.matcher.match_recipes(enhanced_output, top_k=5)
-        
-        context.last_recipes = matches
-        
-        if matches:
-            # Generate natural response
-            num_recipes = len(matches)
-            response = f"Oke, aku menemukan {num_recipes} resep yang cocok! 🍳\n\n"
-            
-            # Show top 3
-            for i, match in enumerate(matches[:3], 1):
-                recipe = match['recipe']
-                score = match['score']
-                response += f"{i}. **{recipe['nama']}** ({score:.0f}/100)\n"
-                response += f"   ⏱ {recipe['waktu_masak']} menit | "
-                response += f"👨‍🍳 {recipe['tingkat_kesulitan']} | "
-                response += f"🔥 {recipe['kalori_per_porsi']} kal\n\n"
-            
-            if num_recipes > 3:
-                response += f"...dan {num_recipes - 3} resep lainnya.\n\n"
-            
-            # Add suggestions
-            suggestions = [
-                f"Lihat detail resep nomor {i}" for i in range(1, min(4, num_recipes + 1))
-            ]
-            suggestions.append("Cari resep lain")
-            suggestions.append("Ubah kriteria")
-            
-            return {
-                'response': response,
-                'recipes': matches,
-                'suggestions': suggestions,
-                'context_updated': True
+        # Return clean NLP result
+        return {
+            'nlp_result': {
+                'status': nlp_result['status'],
+                'intent': nlp_result['intent'],
+                'confidence': nlp_result['confidence'],
+                'entities': nlp_result['entities'],
+                'action': nlp_result['action'],
+                'message': nlp_result['message']
+            },
+            'context': {
+                'collected_entities': context.collected_entities,
+                'conversation_turns': len(context.history)
             }
-        
-        else:
-            response = "Hmm, aku belum menemukan resep yang pas dengan kriteria kamu 🤔\n\n"
-            
-            # Suggest relaxing constraints
-            if context.collected_entities['ingredients']['avoid']:
-                response += "Mungkin pantangannya terlalu banyak? Coba kurangi batasan.\n"
-            
-            if context.collected_entities['time_constraint']:
-                response += "Atau waktunya terlalu singkat? Coba perpanjang waktu.\n"
-            
-            suggestions = [
-                "Ubah bahan utama",
-                "Kurangi pantangan",
-                "Coba teknik masak lain"
-            ]
-            
-            return {
-                'response': response,
-                'recipes': [],
-                'suggestions': suggestions,
-                'context_updated': False
-            }
+        }
     
     def _handle_clarification(
         self,
@@ -405,63 +301,7 @@ class ConversationalAI:
         except Exception as e:
             print(f"Warning: Could not log conversation: {e}")
     
-    def get_recipe_detail(self, user_id: str, recipe_index: int) -> Dict:
-        """Get detailed recipe by index from last search"""
-        context = self.get_or_create_context(user_id)
-        
-        if not context.last_recipes:
-            return {
-                'response': "Belum ada pencarian resep. Coba cari resep dulu! 😊",
-                'recipe': None,
-                'suggestions': ["Cari resep ayam", "Cari resep ikan"]
-            }
-        
-        if recipe_index < 1 or recipe_index > len(context.last_recipes):
-            return {
-                'response': f"Nomor resep tidak valid. Pilih antara 1-{len(context.last_recipes)}",
-                'recipe': None,
-                'suggestions': [f"Lihat resep {i}" for i in range(1, min(4, len(context.last_recipes) + 1))]
-            }
-        
-        match = context.last_recipes[recipe_index - 1]
-        recipe = match['recipe']
-        
-        # Format detailed response
-        response = f"**{recipe['nama']}** 📖\n\n"
-        response += f"⏱ Waktu: {recipe['waktu_masak']} menit\n"
-        response += f"👨‍🍳 Tingkat: {recipe['tingkat_kesulitan']}\n"
-        response += f"🔥 Kalori: {recipe['kalori_per_porsi']} per porsi\n\n"
-        
-        response += "**Bahan Utama:**\n"
-        for ing in recipe.get('bahan_utama', []):
-            response += f"• {ing}\n"
-        
-        response += "\n**Teknik Memasak:**\n"
-        for method in recipe.get('teknik_masak', []):
-            response += f"• {method.capitalize()}\n"
-        
-        if recipe.get('cocok_untuk'):
-            response += "\n✅ **Cocok untuk:**\n"
-            for cocok in recipe['cocok_untuk']:
-                response += f"• {cocok}\n"
-        
-        if recipe.get('tidak_cocok_untuk'):
-            response += "\n⚠️ **Tidak cocok untuk:**\n"
-            for tidak in recipe['tidak_cocok_untuk']:
-                response += f"• {tidak}\n"
-        
-        suggestions = [
-            "Cari resep serupa",
-            "Tanya substitusi bahan",
-            "Hitung nutrisi",
-            "Buat shopping list"
-        ]
-        
-        return {
-            'response': response,
-            'recipe': recipe,
-            'suggestions': suggestions
-        }
+   
 
 
 if __name__ == "__main__":

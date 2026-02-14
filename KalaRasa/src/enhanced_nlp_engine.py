@@ -15,10 +15,7 @@ from src.ner_extractor import NERExtractor
 
 class EnhancedNLPEngine:
     """
-    Enhanced NLP Engine dengan prinsip:
-    1. Klarifikasi > Error
-    2. Keamanan > Kelengkapan
-    3. Jangan berasumsi
+    Enhanced NLP Engine
     """
     
     # Confidence thresholds
@@ -396,17 +393,7 @@ class EnhancedNLPEngine:
         message: str
     ) -> Dict:
         """
-        Create structured JSON response
-        
-        Output format:
-        {
-            "status": "ok | fallback | clarification",
-            "intent": "...",
-            "confidence": 0.xx,
-            "entities": {...},
-            "action": "match_recipe | ask_clarification | reject_input",
-            "message": "pesan ke user"
-        }
+        Create structured JSON response 
         """
         return {
             "status": status,
