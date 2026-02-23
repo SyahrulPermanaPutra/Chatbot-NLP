@@ -1,12 +1,15 @@
-# src/nlp_pipeline.py - FIXED VERSION
-# Enhanced NLP Engine dengan safety-first approach
+# src/enhanced_nlp_engine.py
+# Enhanced NLP Engine – diselaraskan dengan skema database kala_rasa_jtv
+#
+# Output JSON disesuaikan dengan kolom user_queries:
+#   status     : enum('ok','fallback','clarification')
+#   intent     : varchar(50) – sesuai daftar intent yang valid
+#   confidence : decimal(3,2)
+#   entities   : JSON sesuai struktur database (ingredients, health_conditions, dll.)
 
 import re
 import json
-from typing import Dict, List, Optional, Tuple
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from typing import Dict, List, Optional
 
 from src.preprocessor import TextPreprocessor
 from src.intent_classifier import IntentClassifier
@@ -15,470 +18,488 @@ from src.ner_extractor import NERExtractor
 
 class EnhancedNLPEngine:
     """
-    Enhanced NLP Engine
+    NLP Engine utama yang menggabungkan:
+    - TextPreprocessor  (normalisasi kata informal)
+    - IntentClassifier  (TF-IDF + Random Forest)
+    - NERExtractor      (rule-based entity extraction, selaras DB)
     """
-    
-    # Confidence thresholds
-    MIN_CONFIDENCE = 0.35  
-    
-    # Status codes
+
+    # ── Status (sesuai user_queries.status ENUM) ─────────────────────
     STATUS_OK = "ok"
     STATUS_FALLBACK = "fallback"
     STATUS_CLARIFICATION = "clarification"
-    
-    # Actions
+
+    # ── Actions (internal, tidak disimpan ke DB) ──────────────────────
     ACTION_MATCH_RECIPE = "match_recipe"
     ACTION_ASK_CLARIFICATION = "ask_clarification"
     ACTION_REJECT_INPUT = "reject_input"
-    
-    def __init__(self):
-        """Initialize engine with error handling"""
-        print("Initializing NLP components...")
-        
+    ACTION_SHOW_DETAIL = "show_detail"
+    ACTION_CHITCHAT = "chitchat"
+    ACTION_SHOW_RESTRICTIONS = "show_restrictions"
+
+    # ── Threshold ─────────────────────────────────────────────────────
+    MIN_CONFIDENCE = 0.35
+
+    # ── Intent yang memerlukan slot bahan ─────────────────────────────
+    RECIPE_INTENTS = {"cari_resep", "cari_resep_sehat", "filter_bahan"}
+
+    # ── Map intent → action ───────────────────────────────────────────
+    INTENT_ACTION_MAP = {
+        "cari_resep": ACTION_MATCH_RECIPE,
+        "cari_resep_sehat": ACTION_MATCH_RECIPE,
+        "filter_bahan": ACTION_MATCH_RECIPE,
+        "filter_waktu": ACTION_MATCH_RECIPE,
+        "filter_region": ACTION_MATCH_RECIPE,
+        "lihat_detail": ACTION_SHOW_DETAIL,
+        "tanya_pantangan": ACTION_SHOW_RESTRICTIONS,
+        "chitchat": ACTION_CHITCHAT,
+    }
+
+    # ── Kata kunci sederhana untuk fast-track ─────────────────────────
+    SIMPLE_INGREDIENT_KEYWORDS = {
+        "ayam", "ikan", "sapi", "kambing", "udang", "cumi", "kepiting",
+        "tempe", "tahu", "telur", "sayur", "wortel", "bayam", "kangkung",
+        "nasi", "mie", "pasta", "kentang", "singkong",
+    }
+
+    SIMPLE_INTENT_KEYWORDS = {
+        "masak": "cari_resep", "bikin": "cari_resep", "buat": "cari_resep",
+        "resep": "cari_resep", "makan": "cari_resep", "detail": "lihat_detail",
+        "pantangan": "tanya_pantangan",
+    }
+
+    # ── Kosakata dikenal untuk gibberish detection ────────────────────
+    KNOWN_VOCAB = {
+        "saya", "aku", "gw", "mau", "ingin", "pengen", "ada", "tidak", "ga",
+        "gak", "bisa", "boleh", "harus", "masak", "bikin", "buat", "goreng",
+        "rebus", "panggang", "tumis", "ayam", "ikan", "sapi", "udang", "sayur",
+        "tempe", "tahu", "nasi", "mie", "pasta", "telur", "daging", "resep",
+        "masakan", "bahan", "bumbu", "cepat", "mudah", "simple", "diabetes",
+        "kolesterol", "diet", "sehat", "alergi", "pedas", "manis", "asin",
+        "gurih", "segar", "yang", "dengan", "untuk", "tanpa", "aja", "dong",
+        "sih", "nih", "ya", "yuk", "ok", "oke", "halo", "hai", "terima",
+        "kasih", "tolong", "bantu", "carikan", "cari", "tampilkan", "lihat",
+        "detail", "simpan", "hapus", "kalori", "gizi",
+        "pantangan", "hindari", "alergi", "region", "daerah",
+    }
+
+    def __init__(self, model_dir: str = "models"):
+        """
+        Inisialisasi engine.
+        Jika model belum ada, otomatis training dari dataset built-in.
+        """
+        print("Initializing Enhanced NLP Engine...")
+
+        self.preprocessor = TextPreprocessor()
+        print("  ✓ Preprocessor ready")
+
+        self.intent_classifier = IntentClassifier()
         try:
-            self.preprocessor = TextPreprocessor()
-            print("  ✓ Preprocessor loaded")
-        except Exception as e:
-            print(f"  ✗ Preprocessor failed: {e}")
-            raise
-        
-        try:
-            self.intent_classifier = IntentClassifier()
-            self.intent_classifier.load_model()
-            print("  ✓ Intent classifier loaded")
-        except FileNotFoundError:
-            print("  ✗ Model files not found!")
-            print("  Please run: python train_model.py")
-            raise
-        except Exception as e:
-            print(f"  ✗ Intent classifier failed: {e}")
-            raise
-        
-        try:
-            self.ner_extractor = NERExtractor()
-            print("  ✓ NER extractor loaded")
-        except Exception as e:
-            print(f"  ✗ NER extractor failed: {e}")
-            raise
-    
+            self.intent_classifier.load_model(model_dir)
+            print("  ✓ Intent classifier loaded from disk")
+        except (FileNotFoundError, OSError):
+            print("  ℹ Model not found → training from built-in dataset...")
+            self.intent_classifier.train_from_builtin()
+            self.intent_classifier.save_model(model_dir)
+            print("  ✓ Intent classifier trained & saved")
+
+        self.ner_extractor = NERExtractor()
+        print("  ✓ NER extractor ready")
+        print("✓ Enhanced NLP Engine initialized\n")
+
+    # ──────────────────────────────────────────────────────────────────
+    # Main entry point
+    # ──────────────────────────────────────────────────────────────────
+
     def process(self, user_input: str) -> Dict:
         """
-        Main processing function dengan improvements
+        Proses input user dan kembalikan hasil NLP.
+
+        Output disesuaikan dengan kolom user_queries:
+        {
+            "status": "ok" | "fallback" | "clarification",
+            "intent": str,                  # user_queries.intent
+            "confidence": float,            # user_queries.confidence
+            "entities": {                   # user_queries.entities (JSON)
+                "ingredients": {
+                    "main": [...],          # → ingredients.nama
+                    "avoid": [...]          # → health_condition_restrictions
+                },
+                "cooking_methods": [...],
+                "health_conditions": [...], # → health_conditions.nama
+                "taste_preferences": [...],
+                "time_constraint": int|None,# → recipes.waktu_masak
+                "region": str|None          # → recipes.region
+            },
+            "action": str,                  # petunjuk untuk layer berikutnya
+            "message": str                  # pesan untuk user
+        }
         """
         try:
-            # Step 0: Handle empty/single character
-            if not user_input or len(user_input.strip()) == 0:
-                return self._create_response(
+            # ── 0. Input kosong ───────────────────────────────────────
+            if not user_input or not user_input.strip():
+                return self._response(
                     status=self.STATUS_FALLBACK,
                     intent="unknown",
                     confidence=0.0,
                     entities={},
                     action=self.ACTION_ASK_CLARIFICATION,
-                    message="Silakan tanyakan sesuatu tentang resep masakan 😊"
+                    message="Silakan tanyakan sesuatu tentang resep masakan 😊\n"
+                            "Contoh: 'mau masak ayam goreng' atau 'resep untuk diabetes'",
                 )
-            
-            # Step 0.5: Coba handle input sederhana dulu
-            simple_response = self._handle_simple_input(user_input, user_input.lower())
-            if simple_response:
-                return simple_response
-            
-            # Step 1: Gibberish detection (yang sudah diperbaiki)
-            if self._is_gibberish(user_input):
-                # Tapi coba dulu dengan preprocessing
-                preprocessed = self.preprocessor.preprocess(user_input)
-                normalized_text = preprocessed['normalized']
-            
-                # Coba klasifikasi meski dianggap gibberish
-                intent_result = self.intent_classifier.predict(normalized_text)
-            
-                if intent_result['confidence'] > 0.3:  # Threshold rendah
-                    # Lanjutkan processing
-                    intent = intent_result['primary']
-                    confidence = intent_result['confidence']
-                
-                    # Skip ke entity extraction
-                    entities = self.ner_extractor.extract_all(normalized_text)
-                
-                    return self._create_response(
-                        status=self.STATUS_OK,
-                        intent=intent,
-                        confidence=confidence,
-                        entities=entities,
-                        action=self.ACTION_MATCH_RECIPE,
-                        message="Mencari resep sesuai permintaan..."
-                    )
-                else:
-                    return self._create_response(
-                        status=self.STATUS_FALLBACK,
-                        intent="unknown",
-                        confidence=0.0,
-                        entities={},
-                        action=self.ACTION_REJECT_INPUT,
-                        message="Aku belum bisa memahami maksud kamu 😅 Coba tulis dengan kalimat sederhana, misalnya: 'mau masak ayam' atau 'resep ikan'"
-                    )
 
-            # Step 2: Preprocessing
-            preprocessed = self.preprocessor.preprocess(user_input)
-            normalized_text = preprocessed['normalized']
-            
-            # Step 3: Intent classification
-            intent_result = self.intent_classifier.predict(normalized_text)
-            intent = intent_result['primary']
-            confidence = intent_result['confidence']
-            
-            # Step 4: Check confidence threshold
+            text = user_input.strip()
+            text_lower = text.lower()
+
+            # ── 1. Fast-track: input sangat pendek / kata kunci tunggal ──
+            fast = self._fast_track(text_lower)
+            if fast:
+                return fast
+
+            # ── 2. Gibberish detection ────────────────────────────────
+            if self._is_gibberish(text_lower):
+                return self._response(
+                    status=self.STATUS_FALLBACK,
+                    intent="unknown",
+                    confidence=0.0,
+                    entities={},
+                    action=self.ACTION_REJECT_INPUT,
+                    message="Aku belum bisa memahami pesan kamu 😅\n"
+                            "Coba tulis lebih jelas, misalnya:\n"
+                            "• 'mau masak ayam goreng'\n"
+                            "• 'resep untuk penderita diabetes'\n"
+                            "• 'masakan padang yang tidak pedas'",
+                )
+
+            # ── 3. Preprocessing ──────────────────────────────────────
+            preprocessed = self.preprocessor.preprocess(text)
+            normalized = preprocessed["normalized"]
+
+            # ── 4. Intent classification ──────────────────────────────
+            intent_result = self.intent_classifier.predict(normalized)
+            intent = intent_result["primary"]
+            confidence = intent_result["confidence"]
+
+            # ── 5. Low confidence → fallback ──────────────────────────
             if confidence < self.MIN_CONFIDENCE:
-                return self._create_response(
+                return self._response(
                     status=self.STATUS_FALLBACK,
                     intent="unknown",
                     confidence=confidence,
                     entities={},
                     action=self.ACTION_ASK_CLARIFICATION,
-                    message="Maaf, aku belum yakin maksud kamu. Kamu bisa coba:\n• Cari resep (contoh: mau masak ayam goreng)\n• Tanya bahan masakan\n• Tanya pantangan makanan"
+                    message="Maaf, aku belum yakin maksud kamu 🤔\n"
+                            "Kamu bisa coba:\n"
+                            "• Cari resep: 'mau masak ayam goreng'\n"
+                            "• Filter kondisi: 'resep untuk diabetes'\n"
                 )
-            
-            # Step 5: Entity extraction
-            entities = self.ner_extractor.extract_all(normalized_text)
-            
-            # Step 6: Slot validation untuk intent cari_resep
-            if intent in ['cari_resep', 'cari_resep_kompleks', 'cari_resep_kondisi']:
-                validation_result = self._validate_recipe_search_slots(entities)
-                if validation_result['needs_clarification']:
-                    return self._create_response(
+
+            # ── 6. Entity extraction ──────────────────────────────────
+            entities = self.ner_extractor.extract_all(normalized)
+
+            # ── 7. Slot validation untuk intent pencarian resep ───────
+            if intent in self.RECIPE_INTENTS:
+                val = self._validate_recipe_slots(intent, entities)
+                if val["needs_clarification"]:
+                    return self._response(
                         status=self.STATUS_CLARIFICATION,
                         intent=intent,
                         confidence=confidence,
                         entities=entities,
                         action=self.ACTION_ASK_CLARIFICATION,
-                        message=validation_result['message']
+                        message=val["message"],
                     )
-            
-            # Step 7: Safety validation untuk health conditions
-            if entities.get('health_conditions'):
-                safety_result = self._validate_health_safety(entities)
-                if not safety_result['is_safe']:
-                    return self._create_response(
+
+            # ── 8. Validasi keamanan kondisi kesehatan ────────────────
+            if entities.get("health_conditions"):
+                safety = self._validate_health_safety(entities)
+                if not safety["is_safe"]:
+                    return self._response(
                         status=self.STATUS_FALLBACK,
                         intent=intent,
                         confidence=confidence,
                         entities=entities,
                         action=self.ACTION_ASK_CLARIFICATION,
-                        message=safety_result['message']
+                        message=safety["message"],
                     )
-            
-            # Step 8: All checks passed - ready for recipe matching
-            return self._create_response(
+
+            # ── 9. Semua validasi lolos ───────────────────────────────
+            action = self.INTENT_ACTION_MAP.get(intent, self.ACTION_MATCH_RECIPE)
+            message = self._build_ok_message(intent, entities)
+
+            return self._response(
                 status=self.STATUS_OK,
                 intent=intent,
                 confidence=confidence,
                 entities=entities,
-                action=self.ACTION_MATCH_RECIPE,
-                message="Processing recipe search..."
+                action=action,
+                message=message,
             )
-        
-        except Exception as e:
-            # Catch-all error handler
-            print(f"Error in process(): {e}")
+
+        except Exception as exc:
             import traceback
             traceback.print_exc()
-            
-            return self._create_response(
+            return self._response(
                 status=self.STATUS_FALLBACK,
                 intent="error",
                 confidence=0.0,
                 entities={},
                 action=self.ACTION_REJECT_INPUT,
-                message=f"Terjadi kesalahan sistem. Silakan coba lagi."
+                message="Terjadi kesalahan sistem. Silakan coba lagi.",
             )
-    
-    def _is_gibberish(self, text: str) -> bool:
-        try:
-           text = text.strip()
-        
-            # Rule 0: Angka saja tidak dianggap gibberish (bisa jadi "1", "2", dll)
-           if text.isdigit():
-            return False
-            
-            # Rule 1: Check minimum length (jangan terlalu ketat)
-            if len(text) < 2:  # 1 karakter pasti gibberish
-                return True
-            
-            # Rule 2: Check alphabet ratio (lebih longgar)
-            alpha_chars = sum(c.isalpha() for c in text)
-            total_chars = len(text.replace(' ', ''))
-        
-            if total_chars == 0:
-                return True
-            
-            alpha_ratio = alpha_chars / total_chars
-            if alpha_ratio < 0.3:  # Turun dari 0.5 menjadi 0.3
-                return True
-            
-            # Rule 3: Check meaningful words (lebih permisif)
-            words = text.lower().split()
-        
-            # Filter out very short words (toleransi lebih tinggi)
-            meaningful_words = [w for w in words if len(w) >= 2]
-        
-            # Untuk input sangat pendek, lebih toleran
-            if len(words) == 1 and len(words[0]) >= 3:
-                return False
-            
-            if len(meaningful_words) < 1:  # Turun dari 2 menjadi 1
-                return True
-            
-            # Rule 4: Check vocabulary recognition (lebih rendah threshold)
-            recognized = self._check_vocabulary_recognition(meaningful_words)
-            if recognized < 0.2:  # Turun dari 0.3 menjadi 0.2
-                return True
-            
-            return False
-        
-        except Exception as e:
-            print(f"Error in _is_gibberish: {e}")
-            return False  # Jika error, berikan benefit of doubt
 
-    # Tambahkan method untuk handle input pendek/sederhana
-    def _handle_simple_input(self, text: str, normalized_text: str) -> Optional[Dict]:
-        """
-        Handle input yang sangat pendek/sederhana dengan logika khusus
-        """
-        simple_keywords = {
-            # Kata kunci -> intent
-            'ayam': 'cari_resep',
-            'ikan': 'cari_resep', 
-            'sapi': 'cari_resep',
-            'tempe': 'cari_resep',
-            'tahu': 'cari_resep',
-            'nasi': 'cari_resep',
-            'mie': 'cari_resep',
-            'pasta': 'cari_resep',
-            'makan': 'cari_resep',
-            'masak': 'cari_resep',
-            'resep': 'cari_resep',
-            'bikin': 'cari_resep',
-            'buat': 'cari_resep',
-            'mau': 'cari_resep',
-            'pengen': 'cari_resep',
-            'ingin': 'cari_resep',
-        }
-    
-        words = normalized_text.split()
-    
-        # Cek jika ada kata kunci sederhana
+    # ──────────────────────────────────────────────────────────────────
+    # Fast-track untuk input pendek / kata kunci tunggal
+    # ──────────────────────────────────────────────────────────────────
+
+    def _fast_track(self, text_lower: str) -> Optional[Dict]:
+        words = text_lower.split()
+
+        # Single ingredient → langsung cari_resep
+        if len(words) == 1 and words[0] in self.SIMPLE_INGREDIENT_KEYWORDS:
+            ingredient = words[0]
+            return self._response(
+                status=self.STATUS_OK,
+                intent="cari_resep",
+                confidence=0.75,
+                entities={"ingredients": {"main": [ingredient], "avoid": []},
+                          "cooking_methods": [], "health_conditions": [],
+                          "taste_preferences": [], "time_constraint": None, "region": None},
+                action=self.ACTION_MATCH_RECIPE,
+                message=f"Mencari resep dengan bahan {ingredient}...",
+            )
+
+        # Kata kunci intent tunggal
         for word in words:
-            if word in simple_keywords:
-                return self._create_response(
+            if word in self.SIMPLE_INTENT_KEYWORDS:
+                intent = self.SIMPLE_INTENT_KEYWORDS[word]
+                # Ekstrak entities kalau ada
+                entities = self.ner_extractor.extract_all(text_lower)
+                action = self.INTENT_ACTION_MAP.get(intent, self.ACTION_MATCH_RECIPE)
+                return self._response(
                     status=self.STATUS_OK,
-                    intent=simple_keywords[word],
-                    confidence=0.65,  # Confidence cukup
-                    entities={'ingredients': {'main': [word] if word in ['ayam', 'ikan', 'sapi', 'tempe', 'tahu'] else []}},
-                    action=self.ACTION_MATCH_RECIPE,
-                    message="Mencari resep..."
+                    intent=intent,
+                    confidence=0.70,
+                    entities=entities,
+                    action=action,
+                    message=self._build_ok_message(intent, entities),
                 )
-    
+
         return None
 
-    
-    def _check_vocabulary_recognition(self, words: List[str]) -> float:
+    # ──────────────────────────────────────────────────────────────────
+    # Slot validation
+    # ──────────────────────────────────────────────────────────────────
+
+    def _validate_recipe_slots(self, intent: str, entities: Dict) -> Dict:
         """
-        Check what percentage of words are recognized
-        Simple check against common Indonesian words
+        Untuk cari_resep / cari_resep_sehat:
+        Minimal harus ada salah satu dari: bahan utama, kondisi kesehatan, atau region.
         """
-        # Common Indonesian words + cooking terms
-        common_words = {
-            # Pronouns & common words
-            'saya', 'aku', 'gw', 'gue', 'kamu', 'mau', 'ingin', 'pengen',
-            'ada', 'tidak', 'ga', 'gak', 'bisa', 'boleh', 'harus',
-            
-            # Cooking verbs
-            'masak', 'bikin', 'buat', 'goreng', 'rebus', 'panggang', 'tumis',
-            
-            # Ingredients
-            'ayam', 'ikan', 'sapi', 'udang', 'sayur', 'tempe', 'tahu',
-            'nasi', 'mie', 'pasta', 'telur', 'daging',
-            
-            # Cooking terms
-            'resep', 'masakan', 'bahan', 'bumbu', 'cepat', 'mudah', 'simple',
-            
-            # Health terms
-            'diabetes', 'kolesterol', 'diet', 'sehat', 'alergi',
-            
-            # Taste
-            'pedas', 'manis', 'asin', 'gurih', 'segar',
-            
-            # Common words
-            'yang', 'dengan', 'untuk', 'tanpa', 'aja', 'dong', 'sih'
-        }
-        
-        if len(words) == 0:
-            return 0.0
-        
-        recognized_count = sum(1 for word in words if word in common_words)
-        return recognized_count / len(words)
-    
-    def _validate_recipe_search_slots(self, entities: Dict) -> Dict:
-        """
-        Validate if enough information for recipe search
-        
-        Returns:
-            {
-                'needs_clarification': bool,
-                'message': str
-            }
-        """
-        try:
-            ingredients = entities.get('ingredients', {})
-            main_ingredients = ingredients.get('main', [])
-            
-            # Check if ingredients are specified
-            if not main_ingredients:
-                return {
-                    'needs_clarification': True,
-                    'message': "Kamu mau masak bahan apa?\n• Ayam\n• Ikan\n• Sayur\n• Daging\n• Seafood\n• Lainnya"
-                }
-            
+        main_ing = entities.get("ingredients", {}).get("main", [])
+        health_cond = entities.get("health_conditions", [])
+        region = entities.get("region")
+        time_c = entities.get("time_constraint")
+
+        has_enough_info = bool(main_ing or health_cond or region or time_c)
+
+        if not has_enough_info:
             return {
-                'needs_clarification': False,
-                'message': ""
+                "needs_clarification": True,
+                "message": (
+                    "Kamu mau masak apa? Bisa sebutkan:\n"
+                    "• Bahan utama (ayam, ikan, tempe, dll.)\n"
+                    "• Kondisi kesehatan (diabetes, kolesterol, dll.)\n"
+                    "• Asal daerah masakan (Padang, Jawa, Bali, dll.)\n"
+                    "• Atau waktu memasak yang diinginkan 😊"
+                ),
             }
-        except Exception as e:
-            print(f"Error in _validate_recipe_search_slots: {e}")
-            return {
-                'needs_clarification': False,
-                'message': ""
-            }
-    
+
+        return {"needs_clarification": False, "message": ""}
+
     def _validate_health_safety(self, entities: Dict) -> Dict:
         """
-        Validate health safety requirements
-        
-        Returns:
-            {
-                'is_safe': bool,
-                'message': str
-            }
+        Periksa konflik antara bahan yang diinginkan dan kondisi kesehatan.
         """
-        try:
-            health_conditions = entities.get('health_conditions', [])
-            
-            if not health_conditions:
-                return {'is_safe': True, 'message': ''}
-            
-            # Extract all restrictions
-            all_restrictions = []
-            for condition in health_conditions:
-                if isinstance(condition, dict):
-                    all_restrictions.extend(condition.get('avoid', []))
-            
-            # If too many restrictions (potential issue)
-            if len(all_restrictions) > 20:
-                return {
-                    'is_safe': False,
-                    'message': "Aku mendeteksi banyak pantangan makanan. Untuk keamanan, sebaiknya konsultasi dengan ahli gizi untuk rekomendasi yang tepat."
-                }
-            
-            return {'is_safe': True, 'message': ''}
-        except Exception as e:
-            print(f"Error in _validate_health_safety: {e}")
-            return {'is_safe': True, 'message': ''}
-    
-    def _create_response(
+        health_conds = entities.get("health_conditions", [])
+        main_ing = entities.get("ingredients", {}).get("main", [])
+
+        conflicts = []
+        for cond in health_conds:
+            restricted = self.ner_extractor.CONDITION_RESTRICTIONS.get(cond, [])
+            for ing in main_ing:
+                if ing in restricted:
+                    conflicts.append((ing, cond))
+
+        if conflicts:
+            msgs = [f"'{ing}' tidak dianjurkan untuk {cond}" for ing, cond in conflicts]
+            return {
+                "is_safe": False,
+                "message": (
+                    "⚠️ Perhatian:\n" + "\n".join(f"• {m}" for m in msgs) +
+                    "\n\nMaukah kamu mencari alternatif resep yang lebih aman?"
+                ),
+            }
+
+        return {"is_safe": True, "message": ""}
+
+    # ──────────────────────────────────────────────────────────────────
+    # Gibberish detection
+    # ──────────────────────────────────────────────────────────────────
+
+    def _is_gibberish(self, text: str) -> bool:
+        # Angka saja bukan gibberish (bisa nomor resep)
+        if text.strip().isdigit():
+            return False
+
+        # Terlalu pendek
+        if len(text.strip()) < 2:
+            return True
+
+        # Rasio alfabet
+        alpha = sum(c.isalpha() for c in text)
+        total = len(text.replace(" ", ""))
+        if total == 0 or (alpha / total) < 0.25:
+            return True
+
+        # Cek kosakata yang dikenal
+        words = [w for w in text.split() if len(w) >= 2]
+        if not words:
+            return True
+
+        recognized = sum(1 for w in words if w in self.KNOWN_VOCAB)
+        ratio = recognized / len(words)
+
+        # Kata tunggal yang dikenal → bukan gibberish
+        if len(words) == 1 and recognized == 1:
+            return False
+
+        return ratio < 0.15
+
+    # ──────────────────────────────────────────────────────────────────
+    # Helpers
+    # ──────────────────────────────────────────────────────────────────
+
+    def _build_ok_message(self, intent: str, entities: Dict) -> str:
+        main_ing = entities.get("ingredients", {}).get("main", [])
+        avoid = entities.get("ingredients", {}).get("avoid", [])
+        health = entities.get("health_conditions", [])
+        region = entities.get("region")
+        time_c = entities.get("time_constraint")
+
+        parts = []
+        if main_ing:
+            parts.append(f"bahan: {', '.join(main_ing)}")
+        if health:
+            parts.append(f"kondisi: {', '.join(health)}")
+        if region:
+            parts.append(f"daerah: {region}")
+        if time_c:
+            parts.append(f"≤{time_c} menit")
+        if avoid:
+            parts.append(f"tanpa: {', '.join(avoid)}")
+
+        summary = " | ".join(parts) if parts else "preferensi umum"
+
+        messages = {
+            "cari_resep": f"🔍 Mencari resep ({summary})...",
+            "cari_resep_sehat": f"🥗 Mencari resep sehat ({summary})...",
+            "filter_bahan": f"🔄 Memperbarui filter bahan ({summary})...",
+            "filter_waktu": f"⏱️ Mencari resep cepat ({summary})...",
+            "filter_region": f"🗺️ Mencari masakan daerah ({summary})...",
+            "lihat_detail": "📖 Menampilkan detail resep...",
+            "tanya_pantangan": "📋 Menampilkan informasi pantangan makanan...",
+            "chitchat": "👋 Hai! Ada yang bisa aku bantu?",
+        }
+        return messages.get(intent, "Memproses permintaan...")
+
+    def _response(
         self,
         status: str,
         intent: str,
         confidence: float,
         entities: Dict,
         action: str,
-        message: str
+        message: str,
     ) -> Dict:
-        """
-        Create structured JSON response 
-        """
+        """Buat response terstruktur sesuai kolom user_queries."""
         return {
-            "status": status,
-            "intent": intent,
-            "confidence": round(confidence, 2),
-            "entities": self._clean_entities(entities),
-            "action": action,
-            "message": message
+            "status": status,           # user_queries.status
+            "intent": intent,           # user_queries.intent
+            "confidence": round(confidence, 2),  # user_queries.confidence
+            "entities": self._clean_entities(entities),  # user_queries.entities
+            "action": action,           # untuk layer conversational
+            "message": message,         # untuk ditampilkan ke user
         }
-    
+
     def _clean_entities(self, entities: Dict) -> Dict:
-        """Clean entities - remove empty fields"""
-        try:
-            cleaned = {}
-            
-            if 'ingredients' in entities:
-                ing = entities['ingredients']
-                cleaned['ingredients'] = {
-                    'main': ing.get('main', []),
-                    'avoid': ing.get('avoid', [])
-                }
-            
-            if 'cooking_methods' in entities and entities['cooking_methods']:
-                cleaned['cooking_methods'] = entities['cooking_methods']
-            
-            if 'taste_preferences' in entities and entities['taste_preferences']:
-                cleaned['taste_preferences'] = entities['taste_preferences']
-            
-            if 'health_conditions' in entities and entities['health_conditions']:
-                cleaned['health_conditions'] = [
-                    hc['name'] if isinstance(hc, dict) else hc 
-                    for hc in entities['health_conditions']
-                ]
-            
-            if 'time_constraint' in entities and entities['time_constraint']:
-                cleaned['time_constraint'] = entities['time_constraint']
-            
-            return cleaned
-        except Exception as e:
-            print(f"Error in _clean_entities: {e}")
-            return {}
+        """
+        Bersihkan entities – hanya sertakan field yang tidak kosong.
+        Struktur disesuaikan dengan apa yang akan disimpan ke user_queries.entities (JSON).
+        """
+        cleaned = {}
+
+        # ingredients → ingredients.nama
+        ing = entities.get("ingredients", {})
+        cleaned["ingredients"] = {
+            "main": ing.get("main", []),
+            "avoid": ing.get("avoid", []),
+        }
+
+        # cooking_methods
+        if entities.get("cooking_methods"):
+            cleaned["cooking_methods"] = entities["cooking_methods"]
+
+        # health_conditions → health_conditions.nama
+        if entities.get("health_conditions"):
+            cleaned["health_conditions"] = entities["health_conditions"]
+
+        # taste_preferences
+        if entities.get("taste_preferences"):
+            cleaned["taste_preferences"] = entities["taste_preferences"]
+
+        # time_constraint → recipes.waktu_masak (integer menit)
+        if entities.get("time_constraint") is not None:
+            cleaned["time_constraint"] = entities["time_constraint"]
+
+        # region → recipes.region
+        if entities.get("region"):
+            cleaned["region"] = entities["region"]
+
+        return cleaned
 
 
+# ---------------------------------------------------------------------------
+# Quick test
+# ---------------------------------------------------------------------------
 if __name__ == "__main__":
-    # Testing
-    print("=== Enhanced NLP Engine Test ===\n")
-    
-    try:
-        engine = EnhancedNLPEngine()
-        
-        test_cases = [
-            # Valid inputs
-            ("mau masak ayam goreng", "Should work"),
-            ("aku diabetes ga boleh gula", "Should work with health check"),
-            ("pengen bikin pasta", "Should work"),
-            
-            # Missing ingredients
-            ("mau masak yang enak", "Should ask for ingredient"),
-            
-            # Low confidence
-            ("xyz abc def", "Should reject as gibberish"),
-            ("12345 !@#$%", "Should reject as gibberish"),
-            
-            # Too vague
-            ("halo", "Should ask for clarification"),
-            ("iya", "Should ask for clarification"),
-        ]
-        
-        for query, expected in test_cases:
-            print(f"\n{'='*80}")
-            print(f"Input: {query}")
-            print(f"Expected: {expected}")
-            print(f"{'='*80}")
-            
-            result = engine.process(query)
-            
-            print(f"\nStatus: {result['status']}")
-            print(f"Intent: {result['intent']} (confidence: {result['confidence']})")
-            print(f"Action: {result['action']}")
-            print(f"Message: {result['message']}")
-            
-            if result['entities']:
-                print(f"Entities: {json.dumps(result['entities'], indent=2, ensure_ascii=False)}")
-    
-    except Exception as e:
-        print(f"Fatal error: {e}")
-        import traceback
-        traceback.print_exc()
+    engine = EnhancedNLPEngine()
+
+    test_cases = [
+        "mau masak ayam goreng",
+        "aku diabetes ga boleh gula, carikan resep sehat",
+        "resep padang yang tidak terlalu pedas",
+        "carikan yang cepat 20 menit",
+        "lihat resep nomor 1",
+        "berapa kalori rendang",
+        "pantangan makanan untuk hipertensi",
+        "halo selamat pagi",
+        "xzqw abcd efgh",               # gibberish
+        "ayam",                           # single keyword
+        "mau masak tapi tidak mau santan untuk penderita kolesterol",
+    ]
+
+    for q in test_cases:
+        print(f"\n{'='*60}")
+        print(f"Input    : {q}")
+        result = engine.process(q)
+        print(f"Status   : {result['status']}")
+        print(f"Intent   : {result['intent']} ({result['confidence']})")
+        print(f"Action   : {result['action']}")
+        print(f"Message  : {result['message']}")
+        if result["entities"].get("ingredients", {}).get("main"):
+            print(f"Bahan    : {result['entities']['ingredients']['main']}")
+        if result["entities"].get("health_conditions"):
+            print(f"Kondisi  : {result['entities']['health_conditions']}")
+        if result["entities"].get("region"):
+            print(f"Region   : {result['entities']['region']}")

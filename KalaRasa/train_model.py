@@ -1,56 +1,61 @@
 # train_model.py
-# Script untuk training intent classifier
+# Script training intent classifier – kala_rasa_jtv NLP Service
 
-import sys
 import os
+import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from src.intent_classifier import IntentClassifier
-from config.config import MODEL_DIR, INTENT_DATASET
 
 
 def main():
-    """Main training function"""
-    print("="*80)
-    print(" RECIPE NLP CHATBOT - MODEL TRAINING")
-    print("="*80)
-    print()
-    
-    # Create model directory
-    os.makedirs(MODEL_DIR, exist_ok=True)
-    
-    # Initialize classifier
-    print("[1/4] Initializing intent classifier...")
-    classifier = IntentClassifier()
-    
-    # Load dataset
-    print(f"[2/4] Loading dataset from {INTENT_DATASET}...")
-    df = classifier.load_data(INTENT_DATASET)
-    print(f"      Loaded {len(df)} training examples")
-    print(f"      Unique intents: {df['intent'].nunique()}")
-    print()
-    
-    # Train model
-    print("[3/4] Training model (this may take a while)...")
-    results = classifier.train(df, test_size=0.2)
-    print()
-    
-    # Save model
-    print("[4/4] Saving trained model...")
-    classifier.save_model()
-    print()
-    
-    # Summary
-    print("="*80)
-    print(" TRAINING COMPLETED")
-    print("="*80)
-    print(f"Train Accuracy: {results['train_score']:.4f}")
-    print(f"Test Accuracy:  {results['test_score']:.4f}")
-    print()
-    print("Model files saved:")
-    print(f"  - {MODEL_DIR}/intent_classifier.pkl")
-    print(f"  - {MODEL_DIR}/tfidf_vectorizer.pkl")
-    print()
-    
+    print("=" * 70)
+    print("  KALA RASA NLP – MODEL TRAINING")
+    print("=" * 70)
+
+    model_dir = os.getenv("MODEL_DIR", "models")
+    os.makedirs(model_dir, exist_ok=True)
+
+    # Cek apakah ada CSV eksternal
+    csv_path = os.getenv("INTENT_DATASET", "data/intent_dataset.csv")
+    use_csv = os.path.isfile(csv_path)
+
+    clf = IntentClassifier()
+
+    if use_csv:
+        print(f"\n[1/3] Loading dataset dari {csv_path} ...")
+        results = clf.train_from_csv(csv_path)
+    else:
+        print("\n[1/3] Menggunakan built-in dataset (tidak ada CSV ditemukan) ...")
+        results = clf.train_from_builtin(augment=True)
+
+    print(f"\n[2/3] Menyimpan model ke {model_dir}/ ...")
+    clf.save_model(model_dir)
+
+    print("\n" + "=" * 70)
+    print("  TRAINING SELESAI")
+    print("=" * 70)
+    print(f"  Train Accuracy : {results['train_score']:.4f}")
+    print(f"  Test  Accuracy : {results['test_score']:.4f}")
+    print(f"\n  Model tersimpan di:")
+    print(f"    {model_dir}/intent_classifier.pkl")
+    print(f"    {model_dir}/tfidf_vectorizer.pkl")
+
+    # Smoke test predictions
+    print("\n[3/3] Smoke test prediksi...")
+    tests = [
+        "mau masak ayam goreng",
+        "aku diabetes carikan resep",
+        "masakan padang yang enak",
+        "lihat detail resep",
+        "simpan ke favorit",
+        "halo",
+    ]
+    for t in tests:
+        pred = clf.predict(t)
+        print(f"  '{t}'")
+        print(f"    → {pred['primary']} (conf: {pred['confidence']:.2f})")
+
+
 if __name__ == "__main__":
     main()
