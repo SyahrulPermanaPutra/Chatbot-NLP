@@ -1,0 +1,445 @@
+{
+  "_meta": {
+    "description": "Sinonim teknik memasak – mencakup istilah umum, variasi daerah, dan ejaan alternatif di seluruh Indonesia",
+    "last_updated": "2026-03-02",
+    "maintainer": "Tim NLP + Konsultan Kuliner Nusantara"
+  },
+  "goreng": [
+    "fry",
+    "deep fry",
+    "pan fry",
+    "digoreng",
+    "ngegoreng",
+    "goreing",
+    "goreg",
+    "gorang",
+    "menggoreng",
+    "goreng rendam",
+    "goreng celup",
+    "goreng balut",
+    "goreng kering",
+    "goreng basah"
+  ],
+  "tumis": [
+    "stir fry",
+    "sauté",
+    "ditumis",
+    "ngetumis",
+    "tumsi",
+    "tumis",
+    "oseng",
+    "osreng",
+    "tumisan",
+    "menumis",
+    "stir-frying"
+  ],
+  "rebus": [
+    "boil",
+    "direbus",
+    "ngerebus",
+    "reubs",
+    "merebus",
+    "godok",
+    "digodok",
+    "nggodok",
+    "masak air",
+    "didihkan",
+    "boiling",
+    "rebusan"
+  ],
+  "panggang": [
+    "grill",
+    "bake",
+    "roast",
+    "dipanggang",
+    "pangagng",
+    "memanggang",
+    "oven",
+    "roasting",
+    "panggangan",
+    "baked",
+    "roasted"
+  ],
+  "kukus": [
+    "steam",
+    "dikukus",
+    "kuksu",
+    "mengukus",
+    "kukusan",
+    "tim",
+    "ditim",
+    "steaming",
+    "steamed",
+    "pengukusan"
+  ],
+  "bakar": [
+    "grill",
+    "BBQ",
+    "barbecue",
+    "dibakar",
+    "membakar",
+    "bakar arang",
+    "bakar batu",
+    "bakar kayu",
+    "grilling",
+    "charcoal grill",
+    "bara"
+  ],
+  "goreng_tepung": [
+    "deep fry",
+    "crispy",
+    "krispi",
+    "tepung",
+    "goreng tepung",
+    "fried chicken style",
+    "flour coated fry",
+    "crispy fry"
+  ],
+  "oseng": [
+    "tumis",
+    "stir fry",
+    "oseng-oseng",
+    "osreng",
+    "oseng bawang",
+    "oseng mercon"
+  ],
+  "rendang": [
+    "slow cook",
+    "kalio",
+    "rendang kering",
+    "rendang basah",
+    "masak rendang",
+    "merendang"
+  ],
+  "sangrai": [
+    "toast",
+    "roast dry",
+    "disangrai",
+    "nyangrai",
+    "sangre",
+    "sangrai kering",
+    "toasting",
+    "dry roast"
+  ],
+  "ungkep": [
+    "slow simmer",
+    "braise",
+    "diungkep",
+    "ngungkep",
+    "ungkep bumbu",
+    "slow cook with spices",
+    "pre-cook with seasoning"
+  ],
+  "presto": [
+    "pressure cook",
+    "pressure cooker",
+    "dipresto",
+    "ngepresto",
+    "masak presto",
+    "fast cook"
+  ],
+  "blansir": [
+    "blanch",
+    "blanching",
+    "direbus sebentar",
+    "celup air panas",
+    "blansir sayur",
+    "blanching"
+  ],
+  "menyet": [
+    "smash fry",
+    "penyet",
+    "dipenyet",
+    "nyet",
+    "geprek",
+    "smash and fry",
+    "ayam geprek style"
+  ],
+  "pepes": [
+    "steam in leaf",
+    "pepesan",
+    "dibungkus daun",
+    "pepes ikan",
+    "masak pepes",
+    "steamed in banana leaf"
+  ],
+  "bacem": [
+    "sweet braise",
+    "baceman",
+    "dibacem",
+    "mbacem",
+    "bacem tahu tempe",
+    "simmer with palm sugar"
+  ],
+  "semur": [
+    "sweet soy braise",
+    "semuran",
+    "disemur",
+    "nyemur",
+    "masak semur",
+    "braised in sweet soy"
+  ],
+  "asap": [
+    "smoke",
+    "smoked",
+    "diasap",
+    "ngasap",
+    "pengasapan",
+    "smoking",
+    "smoked fish",
+    "ikan asap"
+  ],
+  "oven": [
+    "bake",
+    "roast",
+    "dioven",
+    "ngoven",
+    "oven baking",
+    "oven roasted",
+    "pemanggangan oven"
+  ],
+  "slow_cook": [
+    "slow cooker",
+    "masak lambat",
+    "slow cooking",
+    "masak perlahan",
+    "low heat cooking"
+  ],
+  "pressure_cook": [
+    "pressure cooking",
+    "presto",
+    "fast cook",
+    "high pressure cook"
+  ],
+  "marinasi": [
+    "marinate",
+    "marinade",
+    "dimarinasi",
+    "ngemarinasi",
+    "bumbu rendam",
+    "perendaman bumbu"
+  ],
+  "godok": [
+    "boil",
+    "masak godok",
+    "digodok",
+    "godokan",
+    "rebus santan",
+    "kolak style"
+  ],
+  "gulai": [
+    "curry",
+    "gulai",
+    "masak gulai",
+    "gulai kambing",
+    "gulai ikan",
+    "spicy coconut stew"
+  ],
+  "opor": [
+    "opor",
+    "masak opor",
+    "white curry",
+    "opor ayam",
+    "coconut milk stew"
+  ],
+  "lodeh": [
+    "lodeh",
+    "sayur lodeh",
+    "masak lodeh",
+    "vegetable coconut stew"
+  ],
+  "tongseng": [
+    "tongseng",
+    "masak tongseng",
+    "sweet soy curry",
+    "tongseng kambing"
+  ],
+  "soto": [
+    "soto",
+    "masak soto",
+    "soto ayam",
+    "soto daging",
+    "Indonesian soup"
+  ],
+  "rawon": [
+    "rawon",
+    "masak rawon",
+    "black soup",
+    "rawon daging"
+  ],
+  "konro": [
+    "konro",
+    "masak konro",
+    "rib soup",
+    "pallu konro"
+  ],
+  "pallu": [
+    "pallu",
+    "pallu basa",
+    "pallu butung",
+    "Makassar style stew"
+  ],
+  "coto": [
+    "coto",
+    "coto makassar",
+    "coto mangkasar"
+  ],
+  "capcai": [
+    "capcay",
+    "stir fry vegetables",
+    "capcai goreng",
+    "capcai kuah"
+  ],
+  "kuah": [
+    "soup",
+    "broth",
+    "masak kuah",
+    "berkuah",
+    "sop",
+    "sayur bening"
+  ],
+  "sop": [
+    "soup",
+    "masak sop",
+    "sop daging",
+    "sop ayam",
+    "clear soup"
+  ],
+  "sayur": [
+    "vegetable dish",
+    "masak sayur",
+    "sayur bening",
+    "sayur asem"
+  ],
+  "asem": [
+    "sour",
+    "sayur asem",
+    "masak asem",
+    "tamarind soup"
+  ],
+  "terik": [
+    "terik",
+    "masak terik",
+    "coconut milk stew with spices"
+  ],
+  "besengek": [
+    "besengek",
+    "masak besengek",
+    "Javanese spiced coconut stew"
+  ],
+  "botok": [
+    "botok",
+    "botok tahu tempe",
+    "steamed spiced grated coconut"
+  ],
+  "bothok": [
+    "bothok",
+    "same as botok"
+  ],
+  "garang_asem": [
+    "garang asem",
+    "sour soup with banana leaf wrap"
+  ],
+  "pais": [
+    "pais",
+    "pepes",
+    "pais ikan",
+    "Sundanese style pepes"
+  ],
+  "lalap": [
+    "lalap",
+    "fresh vegetables",
+    "lalapan"
+  ],
+  "sambal": [
+    "sambal",
+    "chili sauce",
+    "make sambal",
+    "ngulek sambal"
+  ],
+  "uleg": [
+    "grind",
+    "pound",
+    "nguleg",
+    "ulekan",
+    "mortar and pestle"
+  ],
+  "tumbuk": [
+    "pound",
+    "tumbuk bumbu",
+    "ditumbuk",
+    "menumbuk"
+  ],
+  "iris": [
+    "slice",
+    "iris tipis",
+    "memotong",
+    "ngiris",
+    "slicing"
+  ],
+  "cincang": [
+    "chop",
+    "mince",
+    "dicincang",
+    "cincang halus",
+    "chopped"
+  ],
+  "potong": [
+    "cut",
+    "potong dadu",
+    "potong korek api",
+    "memotong"
+  ],
+  "parut": [
+    "grate",
+    "diparut",
+    "marut",
+    "kelapa parut",
+    "grated coconut"
+  ],
+  "peras": [
+    "squeeze",
+    "diperas",
+    "meremas",
+    "perasan"
+  ],
+  "remas": [
+    "knead",
+    "remas-remas",
+    "diremas",
+    "meremas"
+  ],
+  "aduk": [
+    "stir",
+    "mix",
+    "diaduk",
+    "ngaduk",
+    "mengaduk"
+  ],
+  "campur": [
+    "mix",
+    "combine",
+    "dicampur",
+    "nyampur",
+    "mencampur"
+  ],
+  "kocok": [
+    "whisk",
+    "beat",
+    "dikocok",
+    "ngocok",
+    "mengocok"
+  ],
+  "haluskan": [
+    "blend",
+    "puree",
+    "dihaluskan",
+    "ngehalusin",
+    "blender"
+  ],
+  "tumis_bawang": [
+    "sauté garlic",
+    "bawang tumis",
+    "menumis bawang"
+  ]
+}

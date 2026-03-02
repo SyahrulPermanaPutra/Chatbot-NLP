@@ -1,0 +1,121 @@
+{
+  "_meta": {
+    "description": "Sinonim bahan protein – mencakup variasi bahasa daerah, istilah kuliner, dan ejaan alternatif di seluruh Indonesia",
+    "last_updated": "2026-03-02",
+    "maintainer": "Tim NLP / Chef Konsultan"
+  },
+  "ayam": [
+    "chicken", "ayem", "aym", "poultry", "unggas", "manuk", "pitik", "jago", "babon", "kate",
+    "ayam kampung", "broiler", "ayam potong", "ayam negeri", "ayam jantan", "ayam betina",
+    "ayam bakar", "ayam goreng", "ayam ungkep", "ayam pedaging", "ayam petelur", "layer",
+    "ayam kampung super", "ceker", "sayap", "dada", "paha", "ayam bagian"
+  ],
+  "sapi": [
+    "beef", "daging sapi", "sapy", "has dalam", "has luar", "tenderloin", "sirloin", "rib-eye",
+    "t-bone", "sampi", "lembu", "daging lembu", "sapi muda", "veal", "sapi dewasa", "sapi bali",
+    "sapi madura", "daging merah", "daging sapi lokal", "daging sapi impor", "sapi perah",
+    "sapi potong", "sapi limosin", "sapi brahman"
+  ],
+  "kambing": [
+    "mutton", "lamb", "kambng", "daging kambing", "wedhus", "menda", "kambing gibas",
+    "kambing kacang", "kambing etawa", "kambing muda", "goat", "kambing jantan", "kambing betina",
+    "kambing gulai", "sate kambing", "kambing kurban"
+  ],
+  "domba": [
+    "lamb", "mutton", "domba", "daging domba", "sheep", "wedhus gembel", "domba garut",
+    "domba merino", "domba ekor gemuk", "domba batur"
+  ],
+  "bebek": [
+    "duck", "itik", "bebek", "meri", "entog", "mentok", "bebek Peking", "bebek goreng",
+    "bebek bakar", "daging bebek", "itik afkir", "itik petelur", "itik pedaging"
+  ],
+  "angsa": ["goose", "angsa", "daging angsa"],
+  "puyuh": ["quail", "puyuh", "burung puyuh", "daging puyuh", "puyuh petelur"],
+  "dara": ["pigeon", "merpati", "burung dara", "dara", "squab", "daging merpati"],
+  "kuda": ["horse", "kuda", "daging kuda", "sate kuda", "tengkes", "kuda liar"],
+  "kerbau": ["buffalo", "kerbau", "daging kerbau", "kebo", "mahesa", "kerbau lumpur", "kerbau rawa"],
+  "rusa": ["deer", "venison", "rusa", "daging rusa", "sate rusa", "rusa timor", "rusa sambar"],
+  "kelinci": ["rabbit", "kelinci", "daging kelinci", "sate kelinci", "kelinci pedaging", "rabbit meat"],
+  "babi": [
+    "pork", "pig", "babi", "daging babi", "ham", "bacon", "babi hutan", "celeng",
+    "babi guling", "sosis babi", "babi panggang", "babi kecap", "pig meat"
+  ],
+  "ikan": [
+    "fish", "iakn", "ikna", "seafood", "fillet ikan", "ikan laut", "ikan air tawar",
+    "tongkol", "tuna", "cakalang", "mujair", "nila", "lele", "patin", "gurame", "mas", "emas",
+    "bandeng", "kakap", "kerapu", "kembung", "selar", "layang", "sarden", "sardine", "makarel",
+    "salem", "salmon", "tenggiri", "bawal", "pari", "hiu", "belut", "sidat", "teri", "teri nasi",
+    "pedet", "sapu-sapu", "ikan asin", "ikan segar", "iwa"
+  ],
+  "udang": [
+    "shrimp", "prawn", "udaang", "udangg", "udang galah", "udang vaname", "udang windu",
+    "udang rebon", "udang jerbung", "udang putih", "udang peci", "udang pancet", "udang lobster",
+    "ebi", "udang kering", "udang segar", "hurang", "udang kupas"
+  ],
+  "cumi": [
+    "squid", "cumi-cumi", "sotong", "cumi basah", "cumi kering", "cumi asin", "cumi bakar",
+    "cumi segar", "cumi goreng", "squid ring"
+  ],
+  "kepiting": [
+    "crab", "kepiting", "rajungan", "ketam", "yuyu", "kepiting bakau", "kepiting lumpur",
+    "kepiting soka", "kepiting jantan", "kepiting betina", "crab meat"
+  ],
+  "kerang": [
+    "clam", "mussel", "kerang hijau", "kerang darah", "kerang dara", "kerang bambu",
+    "kerang tahu", "kerang simping", "remis", "lokalah", "tiram", "oyster", "scallop",
+    "shellfish", "kerang segar"
+  ],
+  "lobster": ["lobster", "lobster air tawar", "lobster laut", "crayfish", "udang karang"],
+  "bekicot": ["snail", "bekicot", "siput", "escargot", "siput sawah"],
+  "tempe": [
+    "tempeh", "tmpe", "temep", "tempe kedelai", "tempe bungkus", "tempe daun",
+    "tempe mendoan", "tempe gembus", "tempe bosok", "tempe semangit", "tempe hominy",
+    "tempe goreng", "tempe bakar"
+  ],
+  "tahu": [
+    "tofu", "thau", "taahu", "tahu putih", "tahu sutra", "tahu kuning", "tahoe",
+    "tahu sumedang", "tahu pong", "tahu isi", "tahu bakso", "tahu gejrot", "tahu bulat",
+    "tahu goreng", "tahu bacem"
+  ],
+  "oncom": ["oncom", "oncom merah", "oncom hitam", "oncom goreng", "oncom mentah"],
+  "telur": [
+    "egg", "telor", "telour", "telur ayam", "telur bebek", "telur puyuh", "telur burung",
+    "telur asin", "telur pitan", "telur segar", "endhog", "telo", "eggs"
+  ],
+  "sosis": [
+    "sausage", "sosis sapi", "sosis ayam", "sosis bakar", "sosis goreng", "frankfurter",
+    "wiener", "bratwurst", "sosis solo", "sosis khas", "sosis brat", "sosis cocktail"
+  ],
+  "bakso": [
+    "meatball", "bakso sapi", "bakso ayam", "bakso ikan", "bakso udang", "bakso urat",
+    "bakso telur", "bakso mercon", "pentol", "cihui", "baso", "bakso tusuk"
+  ],
+  "nugget": ["nugget", "chicken nugget", "fish nugget", "nugget sayur", "fish finger", "nugget ayam"],
+  "seitan": ["seitan", "gluten", "daging tiruan", "protein gandum", "wheat meat"],
+  "kacang": [
+    "bean", "legume", "kacang merah", "kacang hitam", "kacang kedelai", "kacang hijau",
+    "kacang tanah", "kacang tolo", "lentil", "kacang arab", "chickpea", "kacang kapri",
+    "edamame", "kacang polong", "green bean", "red bean", "soybean"
+  ],
+  "susu": [
+    "milk", "susu sapi", "susu kambing", "susu kerbau", "susu kedelai", "susu almond",
+    "susu segar", "susu cair", "susu bubuk", "susu kental manis", "susu evaporasi",
+    "susu rendah lemak", "full cream", "skim", "susu UHT", "susu pasteurisasi"
+  ],
+  "keju": [
+    "cheese", "keju cheddar", "keju mozzarella", "keju parmesan", "keju edam",
+    "keju gouda", "keju krim", "keju cottage", "keju lokal", "keju oles", "keju kraft",
+    "keju lembut", "keju keras", "processed cheese"
+  ],
+  "yogurt": [
+    "yogurt", "yoghurt", "yogurt yunani", "yogurt plain", "yogurt drink", "yogurt rasa",
+    "kefir", "yogurt rendah lemak", "greek yogurt"
+  ],
+  "whey": ["whey", "whey protein", "protein susu", "isolat protein", "whey bubuk"],
+  "daging": [
+    "meat", "dagng", "dagin", "daging merah", "daging putih", "daging olahan",
+    "daging sapi", "daging ayam", "daging kambing", "daging giling", "daging cincang",
+    "daging iris", "daging has", "daging iga", "daging sandung lamur", "daging tetelan",
+    "daging sengkel", "daging lulur", "daging marbling", "daging segar"
+  ]
+}

@@ -7,6 +7,7 @@
 #   confidence : decimal(3,2)
 #   entities   : JSON sesuai struktur database (ingredients, health_conditions, dll.)
 
+import os
 import re
 import json
 from typing import Dict, List, Optional
@@ -90,7 +91,7 @@ class EnhancedNLPEngine:
         """
         print("Initializing Enhanced NLP Engine...")
 
-        self.preprocessor = TextPreprocessor()
+        self.preprocessor = TextPreprocessor(data_dir=os.getenv("NLP_DATA_DIR", "data"))
         print("  ✓ Preprocessor ready")
 
         self.intent_classifier = IntentClassifier()

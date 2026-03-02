@@ -1,0 +1,11 @@
+{
+  "case_weights": {
+    "15": 1.1600000000000001
+  },
+  "similarity_weights": {
+    "text": 0.35,
+    "ingredient": 0.3,
+    "health": 0.2,
+    "constraint": 0.15
+  }
+}

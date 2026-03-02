@@ -1,11 +1,14 @@
-﻿# api/flask_api.py  (v2 – CBR + Redis)
+﻿# api/flask_api.py  (v2 – CBR + Redis + Feedback Loop)
 # Flask NLP Service – kala_rasa_jtv
 #
 # Arsitektur:
-#   POST /api/chat            → NLP processing + slot-filling (existing)
-#   POST /api/cbr/index       → Laravel mengirim data resep → bangun CBR index
-#   POST /api/cbr/match       → CBR similarity matching
-#   GET  /api/cbr/popular     → Rekomendasi populer (cached)
+#   POST /api/chat                → NLP processing + slot-filling
+#   POST /api/cbr/index           → Laravel mengirim data resep → bangun CBR index
+#   POST /api/cbr/match           → CBR similarity matching
+#   POST /api/cbr/popular         → Rekomendasi populer (cached)
+#   POST /api/feedback            → Feedback user (👍/👎)
+#   POST /api/cbr/weights         → Update bobot similarity (Grid Search)
+#   POST /api/reload-dicts        → Hot-reload kamus NLP tanpa restart
 #   GET  /api/session/<id>/context
 #   DELETE /api/session/<id>
 #   GET  /health
@@ -55,7 +58,7 @@ except Exception as e:
     ai = None
 
 try:
-    cbr = CBREngine()
+    cbr = CBREngine(weights_path=os.getenv("CBR_WEIGHTS_PATH", "models/cbr_weights.json"))
     print("✓ CBR Engine ready")
 except Exception as e:
     print(f"✗ CBR init failed: {e}")
@@ -397,7 +400,160 @@ def cbr_popular():
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-# ENDPOINT 5 & 6: Session management
+# ENDPOINT 5: /api/feedback  – Feedback user (👍/👎)
+# ═════════════════════════════════════════════════════════════════════════════
+
+@app.route("/api/feedback", methods=["POST"])
+def submit_feedback():
+    """
+    Terima feedback user dan update CBR case weight.
+
+    Dipanggil dari Laravel ChatbotController setelah user klik 👍/👎.
+
+    Request body:
+    {
+        "session_id":   "user_42_abc123",
+        "user_id":      "42",
+        "recipe_id":    15,
+        "rating":       1,           // 1=positif, -1=negatif
+        "feedback_type": "explicit", // "explicit" | "implicit"
+        "query_hash":   "a1b2c3d4"  // opsional – untuk log
+    }
+
+    Response:
+    {
+        "success": true,
+        "recipe_id":   15,
+        "old_weight":  1.0,
+        "new_weight":  1.08,
+        "delta":       0.08
+    }
+    """
+    if not _auth_ok():
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    if not cbr:
+        return jsonify({"success": False, "error": "CBR engine unavailable"}), 503
+
+    data          = request.get_json(silent=True) or {}
+    recipe_id     = data.get("recipe_id")
+    rating        = data.get("rating")
+    feedback_type = data.get("feedback_type", "explicit")
+
+    if recipe_id is None:
+        return jsonify({"success": False, "error": "'recipe_id' required"}), 400
+    if rating not in (1, -1):
+        return jsonify({"success": False, "error": "'rating' harus 1 atau -1"}), 400
+
+    try:
+        result = cbr.apply_feedback(int(recipe_id), int(rating))
+
+        # Invalidate similarity cache – skor akan berubah setelah weight update
+        if cache:
+            cache.invalidate_cbr_cache()
+
+        return jsonify({"success": True, **result})
+
+    except Exception as exc:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# ENDPOINT 6: /api/cbr/weights  – Update bobot similarity (Grid Search)
+# ═════════════════════════════════════════════════════════════════════════════
+
+@app.route("/api/cbr/weights", methods=["POST"])
+def update_cbr_weights():
+    """
+    Update bobot komponen similarity dari hasil grid search.
+    Hanya boleh dipanggil dari internal (misalnya setelah scripts/optimize_weights.py selesai).
+
+    Request body:
+    {
+        "weights": {
+            "text":       0.35,
+            "ingredient": 0.30,
+            "health":     0.20,
+            "constraint": 0.15
+        }
+    }
+
+    Response: { "success": true, "weights": {...}, "saved": true }
+    """
+    if not _auth_ok():
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    if not cbr:
+        return jsonify({"success": False, "error": "CBR engine unavailable"}), 503
+
+    data    = request.get_json(silent=True) or {}
+    weights = data.get("weights", {})
+
+    required_keys = {"text", "ingredient", "health", "constraint"}
+    if not required_keys.issubset(weights.keys()):
+        return jsonify({
+            "success": False,
+            "error":   f"weights harus punya keys: {required_keys}"
+        }), 400
+
+    total = sum(weights.values())
+    if not (0.99 <= total <= 1.01):
+        return jsonify({
+            "success": False,
+            "error":   f"Jumlah weights harus ~1.0, dapat {total:.4f}"
+        }), 400
+
+    try:
+        cbr.set_similarity_weights(weights)
+
+        # Invalidate cache karena skor akan berubah
+        if cache:
+            cache.invalidate_cbr_cache()
+
+        return jsonify({
+            "success": True,
+            "weights": cbr.similarity_calc.weights,
+            "saved":   True,
+        })
+    except Exception as exc:
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# ENDPOINT 7: /api/reload-dicts  – Hot-reload kamus NLP tanpa restart
+# ═════════════════════════════════════════════════════════════════════════════
+
+@app.route("/api/reload-dicts", methods=["POST"])
+def reload_dictionaries():
+    """
+    Reload kamus NLP (informal_map.json, synonyms/*.json) tanpa restart service.
+    Dipanggil setelah tim konten update file JSON kamus.
+
+    Request body: {} (kosong)
+    Response: { "success": true, "message": "Dictionaries reloaded" }
+    """
+    if not _auth_ok():
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    if not ai:
+        return jsonify({"success": False, "error": "NLP service unavailable"}), 503
+
+    try:
+        ai.nlp_engine.preprocessor.reload_dictionaries()
+        return jsonify({
+            "success": True,
+            "message": "Dictionaries reloaded successfully",
+            "stats": {
+                "informal_map_size":   len(ai.nlp_engine.preprocessor.informal_map),
+                "synonym_count":       len(ai.nlp_engine.preprocessor.synonym_map),
+                "reverse_synonym_count": len(ai.nlp_engine.preprocessor._reverse_synonym),
+            }
+        })
+    except Exception as exc:
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# ENDPOINT 8: /api/session/<id>/context  – Ambil konteks session
 # ═════════════════════════════════════════════════════════════════════════════
 
 @app.route("/api/session/<session_id>/context", methods=["GET"])
@@ -434,6 +590,10 @@ def get_context(session_id: str):
     })
 
 
+# ═════════════════════════════════════════════════════════════════════════════
+# ENDPOINT 9: /api/session/<id>  – Hapus session
+# ═════════════════════════════════════════════════════════════════════════════
+
 @app.route("/api/session/<session_id>", methods=["DELETE"])
 def delete_session(session_id: str):
     if not _auth_ok():
@@ -453,7 +613,7 @@ def delete_session(session_id: str):
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-# ENDPOINT 7: Health check
+# ENDPOINT 10: /health  – Health check
 # ═════════════════════════════════════════════════════════════════════════════
 
 @app.route("/health", methods=["GET"])
