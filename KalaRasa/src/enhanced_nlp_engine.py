@@ -57,31 +57,80 @@ class EnhancedNLPEngine:
     }
 
     # ── Kata kunci sederhana untuk fast-track ─────────────────────────
+    # FIX: Diperluas agar semua bahan utama dari NERExtractor.INGREDIENTS
+    # bisa di-fast-track tanpa bergantung pada intent classifier.
+    # Sebelumnya "kambing", "lele", "salmon", dll. tidak ada di sini
+    # sehingga query "saya ingin makan kambing" jatuh ke fallback.
     SIMPLE_INGREDIENT_KEYWORDS = {
-        "ayam", "ikan", "sapi", "kambing", "udang", "cumi", "kepiting",
-        "tempe", "tahu", "telur", "sayur", "wortel", "bayam", "kangkung",
-        "nasi", "mie", "pasta", "kentang", "singkong",
+        # protein
+        "ayam", "sapi", "kambing", "babi", "ikan", "udang", "cumi",
+        "kepiting", "kerang", "telur", "tempe", "tahu", "lele", "nila",
+        "mas", "tongkol", "tuna", "salmon", "kakap", "mujair", "patin",
+        "bandeng", "susu", "keju", "yogurt",
+        # sayuran
+        "bayam", "kangkung", "sawi", "brokoli", "wortel", "buncis",
+        "terong", "tomat", "jagung", "labu", "jamur", "timun", "tauge",
+        "pare", "asparagus", "paprika",
+        # karbohidrat
+        "nasi", "beras", "mie", "kwetiau", "pasta", "roti", "kentang",
+        "ubi", "singkong", "tepung", "oat", "bihun",
+        # umum
+        "sayur", "daging",
     }
 
     SIMPLE_INTENT_KEYWORDS = {
         "masak": "cari_resep", "bikin": "cari_resep", "buat": "cari_resep",
-        "resep": "cari_resep", "makan": "cari_resep", "detail": "lihat_detail",
-        "pantangan": "tanya_pantangan",
+        "resep": "cari_resep", "makan": "cari_resep",
+        # FIX: tambah kata kunci "mau", "ingin", "pengen" agar pola
+        # "ingin makan kambing" tidak jatuh ke unknown
+        "mau": "cari_resep", "ingin": "cari_resep", "pengen": "cari_resep",
+        "cari": "cari_resep", "carikan": "cari_resep",
+        "detail": "lihat_detail", "lihat": "lihat_detail",
+        "pantangan": "tanya_pantangan", "hindari": "tanya_pantangan",
+        "kalori": "tanya_nutrisi", "gizi": "tanya_nutrisi",
+        "favorit": "lihat_favorit", "simpan": "tambah_favorit",
     }
 
     # ── Kosakata dikenal untuk gibberish detection ────────────────────
+    # FIX: Diperluas dengan semua nama bahan dari NERExtractor.INGREDIENTS
+    # Sebelumnya kata seperti "kambing", "lele", "bandeng", dll tidak ada
+    # sehingga bisa dianggap gibberish jika dikirim sendiri/dalam kalimat pendek
     KNOWN_VOCAB = {
+        # pronouns & connectors
         "saya", "aku", "gw", "mau", "ingin", "pengen", "ada", "tidak", "ga",
-        "gak", "bisa", "boleh", "harus", "masak", "bikin", "buat", "goreng",
-        "rebus", "panggang", "tumis", "ayam", "ikan", "sapi", "udang", "sayur",
-        "tempe", "tahu", "nasi", "mie", "pasta", "telur", "daging", "resep",
-        "masakan", "bahan", "bumbu", "cepat", "mudah", "simple", "diabetes",
-        "kolesterol", "diet", "sehat", "alergi", "pedas", "manis", "asin",
-        "gurih", "segar", "yang", "dengan", "untuk", "tanpa", "aja", "dong",
-        "sih", "nih", "ya", "yuk", "ok", "oke", "halo", "hai", "terima",
-        "kasih", "tolong", "bantu", "carikan", "cari", "tampilkan", "lihat",
-        "detail", "simpan", "hapus", "kalori", "gizi",
-        "pantangan", "hindari", "alergi", "region", "daerah",
+        "gak", "bisa", "boleh", "harus", "yang", "dengan", "untuk", "tanpa",
+        "aja", "dong", "sih", "nih", "ya", "yuk", "ok", "oke",
+        # verbs
+        "masak", "bikin", "buat", "membuat", "goreng", "rebus", "panggang",
+        "tumis", "bakar", "cari", "carikan", "tampilkan", "lihat", "simpan",
+        "hapus", "makan",
+        # protein
+        "ayam", "sapi", "kambing", "babi", "ikan", "udang", "cumi", "kepiting",
+        "kerang", "telur", "tempe", "tahu", "lele", "nila", "mas", "tongkol",
+        "tuna", "salmon", "kakap", "mujair", "patin", "bandeng", "susu", "keju",
+        # sayuran
+        "bayam", "kangkung", "sawi", "brokoli", "wortel", "buncis", "terong",
+        "tomat", "jagung", "labu", "jamur", "timun", "tauge", "pare", "asparagus",
+        "paprika", "seledri",
+        # karbohidrat
+        "nasi", "beras", "mie", "kwetiau", "pasta", "roti", "kentang", "ubi",
+        "singkong", "tepung", "oat", "bihun",
+        # bumbu
+        "bawang", "cabai", "cabe", "jahe", "kunyit", "lengkuas", "serai",
+        "kemiri", "ketumbar", "merica", "garam", "gula", "kecap",
+        # kondisi kesehatan
+        "diabetes", "kolesterol", "diet", "sehat", "alergi", "hipertensi",
+        "vegetarian", "vegan", "maag", "jantung", "anemia",
+        # rasa & sifat
+        "pedas", "manis", "asin", "gurih", "segar", "cepat", "mudah", "simple",
+        # fungsi
+        "resep", "masakan", "bahan", "bumbu", "kalori", "gizi", "nutrisi",
+        "pantangan", "hindari", "favorit", "detail",
+        # sapaan
+        "halo", "hai", "selamat", "pagi", "siang", "malam", "terima", "kasih",
+        "tolong", "bantu",
+        # misc
+        "daging", "sayur", "olahan",
     }
 
     def __init__(self, model_dir: str = "models"):
@@ -262,7 +311,7 @@ class EnhancedNLPEngine:
             return self._response(
                 status=self.STATUS_OK,
                 intent="cari_resep",
-                confidence=0.75,
+                confidence=0.80,
                 entities={"ingredients": {"main": [ingredient], "avoid": []},
                           "cooking_methods": [], "health_conditions": [],
                           "taste_preferences": [], "time_constraint": None, "region": None},
@@ -270,13 +319,59 @@ class EnhancedNLPEngine:
                 message=f"Mencari resep dengan bahan {ingredient}...",
             )
 
-        # Kata kunci intent tunggal
+        # FIX: Cek apakah ada ingredient keyword dalam teks multi-kata.
+        # Sebelumnya hanya cek single-word. Ini yang menyebabkan
+        # "saya ingin makan kambing" tidak terdeteksi karena "kambing"
+        # ada di kalimat panjang dan fast-track hanya handle 1 kata.
+        found_ingredients = [w for w in words if w in self.SIMPLE_INGREDIENT_KEYWORDS]
+        found_intent_words = [w for w in words if w in self.SIMPLE_INTENT_KEYWORDS]
+
+        if found_ingredients and (found_intent_words or len(words) <= 5):
+            # Cukup yakin ini adalah query cari_resep
+            # Ekstrak entities dari teks lengkap untuk hasil lebih akurat
+            entities = self.ner_extractor.extract_all(text_lower)
+
+            # Pastikan ingredient yang ditemukan via fast-track masuk ke entities
+            # (NER mungkin belum menangkap semua karena urutan kata)
+            existing_main = set(entities.get("ingredients", {}).get("main", []))
+            for ing in found_ingredients:
+                if ing not in existing_main:
+                    entities.setdefault("ingredients", {"main": [], "avoid": []})
+                    entities["ingredients"]["main"].append(ing)
+
+            # Tentukan intent: jika ada kata sehat/kondisi kesehatan → cari_resep_sehat
+            has_health = bool(entities.get("health_conditions"))
+            intent = "cari_resep_sehat" if has_health else "cari_resep"
+            action = self.ACTION_MATCH_RECIPE
+
+            return self._response(
+                status=self.STATUS_OK,
+                intent=intent,
+                confidence=0.75,
+                entities=entities,
+                action=action,
+                message=self._build_ok_message(intent, entities),
+            )
+
+        # Kata kunci intent tunggal tanpa ingredient
         for word in words:
             if word in self.SIMPLE_INTENT_KEYWORDS:
                 intent = self.SIMPLE_INTENT_KEYWORDS[word]
-                # Ekstrak entities kalau ada
                 entities = self.ner_extractor.extract_all(text_lower)
                 action = self.INTENT_ACTION_MAP.get(intent, self.ACTION_MATCH_RECIPE)
+
+                # Jika intent adalah cari_resep tapi tidak ada entity bermakna,
+                # jangan fast-track — biarkan classifier yang putuskan
+                if intent == "cari_resep":
+                    has_meaningful = (
+                        entities.get("ingredients", {}).get("main") or
+                        entities.get("health_conditions") or
+                        entities.get("region") or
+                        entities.get("time_constraint") is not None
+                    )
+                    if not has_meaningful:
+                        return None  # fallback ke full pipeline
+
                 return self._response(
                     status=self.STATUS_OK,
                     intent=intent,

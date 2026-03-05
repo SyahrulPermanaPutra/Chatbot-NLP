@@ -119,19 +119,18 @@ class TextPreprocessor:
     # ── Loader ─────────────────────────────────────────────────────────
 
     def _load_informal_map(self) -> Dict[str, str]:
-        """Load informal_map.json; fallback ke builtin."""
+        """Load informal_map.json dengan better error handling."""
         path = os.path.join(self.data_dir, "informal_map.json")
         self._json_loaded = False
         
         try:
             if not os.path.exists(path):
-                print(f"  ⚠ {path} tidak ditemukan, menggunakan builtin informal_map")
+                print(f"  ⚠ {path} tidak ditemukan, menggunakan builtin")
                 return self._BUILTIN_INFORMAL_MAP.copy()
-                
+            
             with open(path, encoding="utf-8") as f:
                 raw = json.load(f)
             
-            # Handle different JSON structures
             result = {}
             
             if isinstance(raw, dict):
@@ -140,27 +139,30 @@ class TextPreprocessor:
                     if k.startswith("_"):
                         continue
                     
-                    # Handle both string values and nested objects
+                    # Handle berbagai format value
                     if isinstance(v, str):
                         result[k] = v
                     elif isinstance(v, dict) and "formal" in v:
                         result[k] = v["formal"]
                     elif isinstance(v, list) and len(v) > 0:
-                        result[k] = v[0]  # Take first item as formal version
+                        result[k] = v[0]
+                    elif v == "":
+                        result[k] = " "  # Handle empty string (deletion)
             
-            self._json_loaded = len(result) > 0
-            if self._json_loaded:
+            if result:
                 print(f"  ✓ Loaded {len(result)} entries from {path}")
+                self._json_loaded = True
                 return result
             else:
                 print(f"  ⚠ No valid entries in {path}, using builtin")
                 return self._BUILTIN_INFORMAL_MAP.copy()
                 
         except json.JSONDecodeError as e:
-            print(f"  ⚠ JSON decode error in {path}: {e}, menggunakan builtin")
+            print(f"  ❌ JSON decode error in {path}: {e}")
+            print(f"     File mungkin corrupted. Cek di line {e.lineno}, col {e.colno}")
             return self._BUILTIN_INFORMAL_MAP.copy()
         except Exception as e:
-            print(f"  ⚠ Gagal load {path}: {e}, menggunakan builtin")
+            print(f"  ❌ Unexpected error loading {path}: {e}")
             return self._BUILTIN_INFORMAL_MAP.copy()
 
     def _load_typo_map(self) -> Dict[str, str]:

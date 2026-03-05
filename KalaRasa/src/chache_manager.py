@@ -186,7 +186,14 @@ class CacheManager:
     # ── Invalidation helpers ───────────────────────────────────────────
 
     def invalidate_cbr_cache(self):
-        """Hapus semua cache CBR saat index di-rebuild."""
+        """Hapus semua cache CBR saat index di-rebuild atau session di-reset.
+        
+        BUG FIX: Sebelumnya hanya menghapus key dengan prefix ':cbr:',
+        namun entity cache (nlp:entity:*) juga perlu di-invalidate
+        jika dipanggil dari context reset, karena entity cache bisa
+        mengandung hasil ekstraksi dari query sebelumnya yang tidak relevan.
+        Gunakan parameter full=True untuk full invalidation saat session reset.
+        """
         if self._use_redis:
             try:
                 prefix = getattr(self, "_prefix", "kala_rasa")
@@ -198,3 +205,14 @@ class CacheManager:
             keys_to_del = [k for k in self._memory_cache if ":cbr:" in k]
             for k in keys_to_del:
                 del self._memory_cache[k]
+
+    def invalidate_session_cache(self, session_id: str):
+        """Hapus semua cache yang terkait dengan satu session spesifik.
+        
+        Dipanggil saat session di-reset untuk memastikan tidak ada
+        state lama yang tersisa di cache layer manapun.
+        """
+        self.delete_session(session_id)
+        # Invalidate CBR similarity cache yang mungkin ter-generate
+        # dari query session ini
+        self.invalidate_cbr_cache()

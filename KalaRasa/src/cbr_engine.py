@@ -139,18 +139,46 @@ class SimilarityCalculator:
         case_ings = set(case.ingredients_main)
         if not case_ings:
             return 0.0
+
+        # Exact Jaccard
         intersection = query_ings & case_ings
         union        = query_ings | case_ings
-        return len(intersection) / len(union) if union else 0.0
+        exact_score  = len(intersection) / len(union) if union else 0.0
+
+        # FIX: Partial/substring match untuk handle kasus seperti:
+        # query: ["kambing"] vs case.ingredients_main: ["daging kambing"]
+        # Sebelumnya tidak ada partial match sehingga skor 0 meski bahan sama.
+        partial_matches = 0
+        for q_ing in query_ings:
+            if q_ing in intersection:
+                continue  # sudah exact match
+            for c_ing in case_ings:
+                if q_ing in c_ing or c_ing in q_ing:
+                    partial_matches += 1
+                    break
+
+        # Partial match berkontribusi setengah dari exact match
+        partial_bonus = (partial_matches / max(len(query_ings), 1)) * 0.5
+
+        return min(1.0, exact_score + partial_bonus)
 
     def _health_similarity(self, query_entities: Dict, case: RecipeCase) -> float:
         conditions = [c.lower() for c in query_entities.get("health_conditions", [])]
         if not conditions:
             return 0.5
+
+        # Hard block: jika kondisi ada di not_suitable_for → score 0
         for cond in conditions:
-            if any(cond in nf for nf in case.not_suitable_for):
+            # FIX: Gunakan substring match agar "diabetes" cocok dengan
+            # "Diabetes Mellitus" atau "Diabetes Tipe 2" di database
+            if any(cond in nf or nf in cond for nf in case.not_suitable_for):
                 return 0.0
-        matched = sum(1 for cond in conditions if any(cond in sf for sf in case.suitable_for))
+
+        matched = 0
+        for cond in conditions:
+            if any(cond in sf or sf in cond for sf in case.suitable_for):
+                matched += 1
+
         return matched / len(conditions)
 
     def _constraint_similarity(self, query_entities: Dict, case: RecipeCase) -> float:

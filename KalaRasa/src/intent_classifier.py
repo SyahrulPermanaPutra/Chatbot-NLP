@@ -11,7 +11,6 @@
 #   lihat_detail         – meminta detail resep tertentu
 #   tanya_pantangan      – bertanya pantangan/pembatasan makanan
 #   tanya_nutrisi        – bertanya kandungan gizi
-#   tambah_favorit       – menambahkan resep ke favorit
 #   hapus_favorit        – menghapus resep dari favorit
 #   lihat_favorit        – melihat daftar favorit
 #   chitchat             – percakapan umum
@@ -77,6 +76,27 @@ class IntentClassifier:
         {"text": "mau masak tahu goreng", "intent": "cari_resep"},
         {"text": "resep kwetiau goreng", "intent": "cari_resep"},
         {"text": "bikin nasi kuning dong", "intent": "cari_resep"},
+        # FIX: Tambah pola "ingin makan X" yang sebelumnya tidak ada
+        # → menyebabkan "saya ingin makan kambing" → unknown
+        {"text": "saya ingin makan kambing", "intent": "cari_resep"},
+        {"text": "ingin makan ayam", "intent": "cari_resep"},
+        {"text": "pengen makan ikan", "intent": "cari_resep"},
+        {"text": "mau makan sapi", "intent": "cari_resep"},
+        {"text": "saya mau makan udang", "intent": "cari_resep"},
+        {"text": "pengen makan tempe", "intent": "cari_resep"},
+        {"text": "ingin makan sesuatu dengan kambing", "intent": "cari_resep"},
+        {"text": "mau makan apa ya pakai ikan lele", "intent": "cari_resep"},
+        {"text": "saya lapar mau masak kambing", "intent": "cari_resep"},
+        {"text": "ada kambing di kulkas mau dimasak apa", "intent": "cari_resep"},
+        {"text": "bahan kambing cocok untuk masakan apa", "intent": "cari_resep"},
+        {"text": "olahan kambing yang enak", "intent": "cari_resep"},
+        {"text": "masakan dari kambing", "intent": "cari_resep"},
+        {"text": "menu kambing hari ini", "intent": "cari_resep"},
+        {"text": "ingin makan lele bakar", "intent": "cari_resep"},
+        {"text": "pengen makan cumi goreng", "intent": "cari_resep"},
+        {"text": "mau makan bandeng presto", "intent": "cari_resep"},
+        {"text": "makan siang pakai ikan nila", "intent": "cari_resep"},
+        {"text": "makan malam pakai daging sapi", "intent": "cari_resep"},
 
         # ── cari_resep_sehat ─────────────────────────────────────────
         {"text": "aku diabetes mau masak apa", "intent": "cari_resep_sehat"},
@@ -97,6 +117,12 @@ class IntentClassifier:
         {"text": "resep ayam untuk penderita kolesterol", "intent": "cari_resep_sehat"},
         {"text": "ada resep tidak pake santan untuk darah tinggi", "intent": "cari_resep_sehat"},
         {"text": "masakan rendah sodium untuk hipertensi", "intent": "cari_resep_sehat"},
+        # FIX: Tambah pola "ingin makan X" dengan kondisi kesehatan
+        {"text": "ingin makan kambing tapi kolesterol", "intent": "cari_resep_sehat"},
+        {"text": "saya diabetes ingin makan ikan", "intent": "cari_resep_sehat"},
+        {"text": "pengen makan ayam tapi hipertensi", "intent": "cari_resep_sehat"},
+        {"text": "mau makan daging tapi asam urat", "intent": "cari_resep_sehat"},
+        {"text": "ada kondisi jantung mau makan apa", "intent": "cari_resep_sehat"},
 
         # ── filter_bahan ─────────────────────────────────────────────
         {"text": "yang tidak pakai santan", "intent": "filter_bahan"},
@@ -276,8 +302,72 @@ class IntentClassifier:
         return {"train_score": train_acc, "test_score": test_acc}
 
     def _augment_data(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Data augmentation sederhana."""
+        """Data augmentation dengan template substitution dan synonym expansion.
+        
+        FIX: Sebelumnya augmentasi hanya mengganti kata satu per satu,
+        tidak menghasilkan variasi pola kalimat yang cukup untuk melatih
+        classifier mengenali 'saya ingin makan X' sebagai cari_resep.
+        Sekarang ditambah template-based augmentation untuk coverage lebih luas.
+        """
         augmented = []
+        
+        # Template untuk cari_resep – mencakup pola "ingin makan X"
+        CARI_RESEP_TEMPLATES = [
+            "mau masak {bahan}",
+            "ingin masak {bahan}",
+            "pengen masak {bahan}",
+            "mau bikin {bahan}",
+            "carikan resep {bahan}",
+            "resep {bahan} dong",
+            "ingin makan {bahan}",
+            "pengen makan {bahan}",
+            "mau makan {bahan}",
+            "saya ingin makan {bahan}",
+            "saya mau makan {bahan}",
+            "ada {bahan} mau masak apa",
+            "punya {bahan} bisa dimasak apa",
+            "masakan dari {bahan}",
+            "olahan {bahan} yang enak",
+            "menu {bahan} hari ini",
+        ]
+        
+        BAHAN_LIST = [
+            "kambing", "ayam", "ikan", "sapi", "udang", "tempe", "tahu",
+            "lele", "nila", "bandeng", "cumi", "kepiting", "telur",
+            "bayam", "kangkung", "wortel", "kentang", "tahu tempe",
+        ]
+        
+        # Generate template-based samples untuk cari_resep
+        for template in CARI_RESEP_TEMPLATES:
+            for bahan in BAHAN_LIST:
+                augmented.append({
+                    "text": template.format(bahan=bahan),
+                    "intent": "cari_resep",
+                })
+
+        # Template cari_resep_sehat
+        SEHAT_TEMPLATES = [
+            "{bahan} untuk penderita {kondisi}",
+            "ingin makan {bahan} tapi punya {kondisi}",
+            "saya {kondisi} boleh makan {bahan}",
+            "resep {bahan} cocok untuk {kondisi}",
+        ]
+        KONDISI_LIST = ["diabetes", "kolesterol", "hipertensi", "asam urat", "maag"]
+        BAHAN_SEHAT = ["ayam", "ikan", "tempe", "tahu", "sayur", "kambing"]
+        
+        for template in SEHAT_TEMPLATES:
+            for bahan in BAHAN_SEHAT:
+                for kondisi in KONDISI_LIST:
+                    augmented.append({
+                        "text": template.format(bahan=bahan, kondisi=kondisi),
+                        "intent": "cari_resep_sehat",
+                    })
+        
+        # Tambahkan semua data asli
+        for _, row in df.iterrows():
+            augmented.append(row.to_dict())
+        
+        # Synonym substitution pada data asli
         synonym_map = {
             "mau": ["ingin", "pengen", "kepingin"],
             "masak": ["bikin", "buat", "membuat"],
@@ -287,13 +377,14 @@ class IntentClassifier:
             "cepat": ["cepet", "kilat"],
         }
         for _, row in df.iterrows():
-            augmented.append(row.to_dict())
             text, intent = row["text"], row["intent"]
             if intent != "chitchat":
                 for word, syns in synonym_map.items():
                     if word in text:
                         augmented.append({"text": text.replace(word, syns[0]), "intent": intent})
-        return pd.DataFrame(augmented)
+        
+        result_df = pd.DataFrame(augmented).drop_duplicates(subset=["text"])
+        return result_df
 
     # ----------------------------------------------------------------
     # Prediction
@@ -344,6 +435,76 @@ class IntentClassifier:
             self.vectorizer = pickle.load(f)
         self._trained = True
         print("Model loaded ✓")
+
+    def retrain_from_conversation_history(
+        self,
+        history: List[Dict],
+        model_dir: str = "models",
+        min_confidence: float = 0.75,
+    ) -> Dict:
+        """
+        Retrain model dengan menambahkan data dari conversation history.
+        
+        Workflow feedback loop:
+        1. Ambil history percakapan dari DB (user_queries dengan status='ok')
+        2. Filter hanya yang confidence tinggi (reliable pseudo-labels)
+        3. Gabungkan dengan built-in dataset
+        4. Retrain dan simpan model baru
+        
+        Args:
+            history: list of {"query_text": str, "intent": str, "confidence": float}
+                     dari tabel user_queries
+            model_dir: direktori output model
+            min_confidence: threshold confidence untuk menerima sample dari history
+        
+        Returns:
+            {"train_score": float, "test_score": float, "new_samples": int}
+        
+        Contoh pemanggilan dari Laravel artisan command:
+            # Ambil data dari DB
+            queries = UserQuery::where('status', 'ok')
+                                ->where('confidence', '>=', 0.75)
+                                ->get(['query_text', 'intent', 'confidence'])
+            # Kirim ke Flask endpoint /api/nlp/retrain
+        """
+        # Filter samples yang reliable
+        new_samples = []
+        for item in history:
+            query_text = item.get("query_text", "").strip()
+            intent = item.get("intent", "").strip()
+            confidence = float(item.get("confidence", 0))
+            
+            if not query_text or not intent:
+                continue
+            if intent == "unknown" or intent == "error":
+                continue
+            if confidence < min_confidence:
+                continue
+            # Validasi intent adalah intent yang dikenal
+            valid_intents = {row["intent"] for row in self.TRAINING_DATA}
+            if intent not in valid_intents:
+                continue
+            
+            new_samples.append({"text": query_text, "intent": intent})
+        
+        if not new_samples:
+            print("  ⚠ Tidak ada sample valid dari conversation history")
+            return {"train_score": 0, "test_score": 0, "new_samples": 0}
+        
+        print(f"  ✓ {len(new_samples)} new samples dari conversation history")
+        
+        # Gabungkan dengan built-in data
+        combined = pd.DataFrame(self.TRAINING_DATA + new_samples)
+        combined = self._augment_data(combined)
+        
+        result = self._train(combined)
+        result["new_samples"] = len(new_samples)
+        
+        # Simpan model baru
+        self.save_model(model_dir)
+        print(f"  ✓ Model retrained dengan {len(new_samples)} conversation samples")
+        
+        return result
 
 
 # ---------------------------------------------------------------------------

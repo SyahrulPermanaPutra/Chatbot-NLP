@@ -82,7 +82,7 @@ def _conversation_state(nlp: Dict, ctx: Dict) -> str:
     status = nlp.get("status", "fallback")
     action = nlp.get("action", "")
 
-    non_recipe = {"chitchat", "tanya_pantangan", "tanya_nutrisi", "lihat_detail"}
+    non_recipe = {"chitchat","lihat_detail"}
     if intent in non_recipe:
         return "done"
     if status == "clarification" or action == "ask_clarification":
@@ -154,8 +154,11 @@ def chat():
             ai.reset_context(session_id)
             if cache:
                 cache.delete_session(session_id)
+                # BUG FIX: Hapus juga similarity cache agar query lama
+                # tidak ter-serve ke session baru yang memakai session_id sama.
+                cache.invalidate_cbr_cache()
 
-        result = ai.process_message(session_id, message)
+        result = ai.process_message(session_id, message, reset=bool(data.get("reset")))
         nlp    = result["nlp_result"]
         ctx    = result["context"]
 
@@ -553,6 +556,185 @@ def reload_dictionaries():
 
 
 # ═════════════════════════════════════════════════════════════════════════════
+# ENDPOINT 11: /api/nlp/retrain  – Retrain intent classifier dari conversation history
+# ═════════════════════════════════════════════════════════════════════════════
+
+@app.route("/api/nlp/retrain", methods=["POST"])
+def retrain_intent_classifier():
+    """
+    Retrain intent classifier menggunakan data conversation history dari Laravel.
+
+    Dipanggil dari artisan command atau scheduler setelah cukup data terkumpul.
+    
+    Workflow feedback loop:
+    1. Laravel artisan export data user_queries (status=ok, confidence>=0.75)
+    2. POST ke endpoint ini dengan data tersebut
+    3. Flask retrain model dengan data baru + built-in dataset
+    4. Model disimpan ke disk, langsung aktif untuk request berikutnya
+
+    Request body:
+    {
+        "history": [
+            {
+                "query_text": "saya ingin makan kambing",
+                "intent": "cari_resep",
+                "confidence": 0.82
+            },
+            ...
+        ],
+        "min_confidence": 0.75   // opsional, default 0.75
+    }
+
+    Response:
+    {
+        "success": true,
+        "train_score": 0.97,
+        "test_score": 0.89,
+        "new_samples": 43
+    }
+    """
+    if not _auth_ok():
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    if not ai:
+        return jsonify({"success": False, "error": "NLP service unavailable"}), 503
+
+    data = request.get_json(silent=True) or {}
+    history = data.get("history", [])
+    min_confidence = float(data.get("min_confidence", 0.75))
+
+    if not history:
+        return jsonify({"success": False, "error": "history array is required"}), 400
+
+    try:
+        result = ai.nlp_engine.intent_classifier.retrain_from_conversation_history(
+            history=history,
+            model_dir=MODEL_DIR,
+            min_confidence=min_confidence,
+        )
+        return jsonify({"success": True, **result})
+
+    except Exception as exc:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# ENDPOINT 12: /api/cbr/rebuild  – Rebuild CBR index dengan force-refresh
+# ═════════════════════════════════════════════════════════════════════════════
+
+@app.route("/api/cbr/rebuild", methods=["POST"])
+def cbr_rebuild():
+    """
+    Force rebuild CBR index dari data terbaru (tanpa hash check).
+    Berbeda dengan /api/cbr/index yang skip rebuild jika hash sama.
+
+    Gunakan endpoint ini ketika:
+    - Resep baru di-approve di database
+    - Ada perubahan data resep (update bahan, suitability, dll.)
+    - Setelah optimize_weights.py mengubah similarity weights
+    - Saat maintenance / deployment baru
+
+    Request body:
+    {
+        "recipes": [...],   // data resep terbaru dari Laravel
+        "reason": "new_recipe_approved"  // opsional, untuk logging
+    }
+
+    Response:
+    {
+        "success": true,
+        "cases_indexed": 87,
+        "index_hash": "abc123",
+        "reason": "new_recipe_approved",
+        "cache_invalidated": true
+    }
+    """
+    if not _auth_ok():
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    if not cbr:
+        return jsonify({"success": False, "error": "CBR engine unavailable"}), 503
+
+    data = request.get_json(silent=True) or {}
+    recipes = data.get("recipes", [])
+    reason = data.get("reason", "manual_rebuild")
+
+    if not recipes:
+        return jsonify({"success": False, "error": "No recipes provided"}), 400
+
+    try:
+        # Force rebuild dengan cara reset hash dulu
+        cbr._cases_hash = ""  # paksa rebuild meski data sama
+        count = cbr.load_cases(recipes)
+
+        # Invalidate ALL cache karena index baru
+        if cache:
+            cache.set_index_hash(cbr._cases_hash)
+            cache.invalidate_cbr_cache()
+
+        return jsonify({
+            "success": True,
+            "cases_indexed": count,
+            "index_hash": cbr._cases_hash,
+            "reason": reason,
+            "cache_invalidated": True,
+            "stats": cbr.get_stats(),
+        })
+
+    except Exception as exc:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# ENDPOINT 13: /api/cbr/feedback/bulk  – Batch feedback untuk update case weights
+# ═════════════════════════════════════════════════════════════════════════════
+
+@app.route("/api/cbr/feedback/bulk", methods=["POST"])
+def cbr_feedback_bulk():
+    """
+    Batch update CBR case weights dari multiple feedback sekaligus.
+    Dipakai untuk initial seeding dari historical feedback data.
+
+    Request body:
+    {
+        "feedbacks": [
+            {"recipe_id": 15, "rating": 1},
+            {"recipe_id": 22, "rating": -1},
+            ...
+        ]
+    }
+    """
+    if not _auth_ok():
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    if not cbr:
+        return jsonify({"success": False, "error": "CBR engine unavailable"}), 503
+
+    data = request.get_json(silent=True) or {}
+    feedbacks = data.get("feedbacks", [])
+
+    if not feedbacks:
+        return jsonify({"success": False, "error": "feedbacks array required"}), 400
+
+    try:
+        results = cbr.apply_bulk_feedback(feedbacks)
+
+        # Invalidate cache setelah bulk update
+        if cache:
+            cache.invalidate_cbr_cache()
+
+        return jsonify({
+            "success": True,
+            "updated": len(results),
+            "results": results,
+        })
+
+    except Exception as exc:
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
+# ═════════════════════════════════════════════════════════════════════════════
 # ENDPOINT 8: /api/session/<id>/context  – Ambil konteks session
 # ═════════════════════════════════════════════════════════════════════════════
 
@@ -604,7 +786,11 @@ def delete_session(session_id: str):
         ai.reset_context(session_id)
         deleted = True
     if cache:
-        cache.delete_session(session_id)
+        # BUG FIX: Gunakan invalidate_session_cache untuk membersihkan
+        # SEMUA cache yang terkait session (session context + CBR similarity).
+        # Sebelumnya hanya delete_session yang dipanggil, meninggalkan
+        # similarity cache yang masih bisa di-hit oleh query baru.
+        cache.invalidate_session_cache(session_id)
         deleted = True
 
     if deleted:
