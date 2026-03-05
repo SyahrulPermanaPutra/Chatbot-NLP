@@ -1,10 +1,15 @@
 Pre-Deploy
 •	Pastikan Flask service berjalan: curl http://localhost:5000/health
-•	Jalankan CBR index build: php artisan cbr:rebuild-index
-•	Seed feedback historis ke CBR: php artisan cbr:sync-feedback --days=90
-•	Validasi kamus NLP: python src/validate_dict.py
+•	Jalankan CBR index build: php artisan cbr:rebuild-index di laravel
+•	Validasi kamus NLP: python src/validate_dict.py --all
+•	Validasi Engine dengan python test.py
 •	Pastikan Redis berjalan dan dapat diakses Laravel
 •	Set NLP_SERVICE_KEY di .env (sama di Laravel dan Flask)
+
+// catatan : 
+•   Update Index CBR php artisan nlp:retrain
+•	Seed feedback historis ke CBR: php artisan cbr:sync-feedback --days=90
+
 
 Post-Deploy
 •	Cek health endpoint: GET /api/chatbot/health
