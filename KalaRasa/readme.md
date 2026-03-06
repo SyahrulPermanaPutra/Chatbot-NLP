@@ -1,3 +1,13 @@
+Setup : 
+1. Aktivin venv di folder Chatbot-NLP 
+Windows
+venv\Scripts\activate
+Linux :
+source venv/bin/activate
+2.  Cd Kalarasa terus pip install -r requirements.txt
+3. Copy env.exampple
+3. Lanjut ke Pre-Deploy
+
 Pre-Deploy
 •	Pastikan Flask service berjalan: curl http://localhost:5000/health
 •	Jalankan CBR index build: php artisan cbr:rebuild-index di laravel
